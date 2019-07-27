@@ -1,3 +1,5 @@
+package hotpotato
+
 import shapeless._
 import shapeless.ops.coproduct.Basis
 
@@ -7,5 +9,5 @@ final class Embedder[Super <: Coproduct] {
 }
 
 object Embedder {
-  def make[Super <: Coproduct] = new Embedder[Super]
+  implicit def make[Super <: Coproduct] = new Embedder[Super]
 }
