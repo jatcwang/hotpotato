@@ -4,7 +4,8 @@ import hotpotato.Examples.E1_E2_E3
 import org.scalatest.{FreeSpec, Matchers}
 import Examples._
 import ErrorTrans._
-import shapeless.:+:
+import shapeless.ops.coproduct.Basis
+import shapeless.{:+:, Coproduct}
 
 class ErrorCombineSpec extends FreeSpec with Matchers {
 
@@ -19,6 +20,14 @@ class ErrorCombineSpec extends FreeSpec with Matchers {
 
     result shouldBe Right("")
 
+  }
+
+  "flatmap combines error" in {
+    val result = for {
+      _ <- func_E1_E2
+      _ <- func_E2_E3
+      _ <- func_E2_E3
+    } yield ()
   }
 
 }
