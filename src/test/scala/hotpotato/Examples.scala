@@ -15,6 +15,8 @@ object Examples {
 
   def func_E1: Either[E1, String] = Right("")
   def func_E1_E2: Either[E1 :+: E2 :+: CNil, String] = Right("")
+  def func_E1_E2_E3: Either[E1 :+: E2 :+: E3 :+: CNil, String] = Right("")
+  def func_E1_E3: Either[E1 :+: E2 :+: CNil, String] = Right("")
   def func_E2_E3: Either[E2 :+: E3 :+: CNil, String] = Right("")
   def func_E4: Either[E4, String] = Right("")
 

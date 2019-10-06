@@ -6,22 +6,9 @@ import cats.implicits._
 import shapeless._
 import shapeless.ops.coproduct.{Basis, Inject}
 
-trait BiToMonad[F[_, _], A, G[_]] {
-  def to[B](fa: F[A, B]): G[B]
-  def from[B](ga: G[B]): F[A, B]
-}
-
-object BiToMonad {
-  implicit def eitherTBiToMonad[FF[_], A]: BiToMonad[EitherT[FF, *, *], A, EitherT[FF, A, *]] =
-    new BiToMonad[EitherT[FF, *, *], A, EitherT[FF, A, *]] {
-      override def to[B](fa: EitherT[FF, A, B]): EitherT[FF, A, B]   = fa
-      override def from[B](ga: EitherT[FF, A, B]): EitherT[FF, A, B] = ga
-    }
-}
-
 /** Typeclass for effect type that has an error type and can transform the error to another */
-trait ErrorTrans[F[_, _], E, A] {
-  def transformError[EE](fea: F[E, A])(f: E => EE): F[EE, A]
+trait ErrorTrans[F[_, _], L, R] {
+  def transformError[LL](fea: F[L, R])(f: L => LL): F[LL, R]
 }
 
 object ErrorTrans extends LowerPriorityErrorTrans {
@@ -35,41 +22,80 @@ object ErrorTrans extends LowerPriorityErrorTrans {
         fea.leftMap(f)
     }
 
-  implicit class ErrorTransCoprodEmbedOps[F[_, _], ThisError <: Coproduct, A](
-    val in: F[ThisError, A],
-  ) extends AnyVal {
-    def embedError[Super <: Coproduct](
-      implicit F: ErrorTrans[F, ThisError, A],
-      embedder: Embedder[Super],
-      basis: Basis[Super, ThisError],
-    ): F[Super, A] =
-      F.transformError(in) { err =>
-        embedder.embed[ThisError](err)(basis)
-      }
+  //FIXME: need to wrap the other direction
+  class Wrapper[F[_, _], L <: Coproduct, R](val unwrap: F[L, R]) extends AnyVal {
+    def map[RR](func: R => RR)(implicit f: Bifunctor[F]): Wrapper[F, L, RR] = {
+      new Wrapper(f.rightFunctor.map(unwrap)(func))
+    }
 
-    def flatMap[ThatError <: Coproduct, B, G[_]](f: A => F[ThatError, B])(
-      implicit G: FlatMap[G],
-      bimThis: BiToMonad[F, ThisError, G],
-      basis: Basis[ThisError, ThatError],
-      bifunc: Bifunctor[F],
-    ): F[ThisError, B] = {
-      val flatMapFunc =
-        f.andThen(s => s.leftMap(thatError => basis.inverse(Right(thatError)))).map(bimThis.to)
-      bimThis.from(bimThis.to(in).flatMap(flatMapFunc))
+    // Case when LL is superset of L
+    def flatMap[G[_], LL <: Coproduct, RR](f: R => Wrapper[F, LL, RR])(
+      implicit
+      funcToBi: FunctorToBifunctor[F, LL, G],
+      basis: Basis[LL, L],
+      gFlatMap: FlatMap[G],
+      fBifunctor: Bifunctor[F],
+    ): Wrapper[F, LL, RR] = {
+      val flatMapFunc: R => G[RR] = f.andThen(wrapper => funcToBi.fromBi(wrapper.unwrap))
+      val leftSideEmbedded: F[LL, R] = unwrap.leftMap(l => basis.inverse(Right(l)))
+      new Wrapper(funcToBi.toBi(funcToBi.fromBi(leftSideEmbedded).flatMap(flatMapFunc)))
+    }
+
+    // Case when LL is a subset of L
+    def flatMap[G[_], LL <: Coproduct, RR](f: R => Wrapper[F, LL, RR])(
+      implicit
+      funcToBi: FunctorToBifunctor[F, L, G],
+      subset: Subset[LL, L],
+      gFlatMap: FlatMap[G],
+      fBifunctor: Bifunctor[F],
+    ): Wrapper[F, L, RR] = {
+      val gr: G[R] = funcToBi.fromBi(unwrap)
+      val ff: R => G[RR] = f.andThen(wrapper => funcToBi.fromBi(wrapper.unwrap.leftMap(ll => subset.embedIn(ll))))
+      new Wrapper(funcToBi.toBi(gr.flatMap(ff)))
     }
   }
 
-  implicit class ErrorTransOps[F[_, _], ThisError <: Coproduct, T](val in: F[ThisError, T])
+  implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
+    val in: F[L, R],
+  ) extends AnyVal {
+    def embedError[Super <: Coproduct](
+      implicit F: ErrorTrans[F, L, R],
+      embedder: Embedder[Super],
+      basis: Basis[Super, L],
+    ): F[Super, R] =
+      F.transformError(in) { err =>
+        embedder.embed[L](err)(basis)
+      }
+
+  }
+
+  implicit class ErrorTransIdLeftOps[F[_, _], L, R](val in: F[L, R]) extends AnyVal {
+
+    def embedError[Super <: Coproduct](
+      implicit F: ErrorTrans[F, L, R],
+      inject: Inject[Super, L],
+    ): F[Super, R] =
+      F.transformError(in) { err =>
+        inject(err)
+      }
+
+  }
+
+  implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](val in: F[L, R])
       extends AnyVal {
+
+    def wrap: Wrapper[F, L, R] = {
+      new Wrapper(in)
+    }
 
     def handleSome[A0, A0Out, A1, A1Out, BasisRest <: Coproduct, UniqueOut <: Coproduct](
       a0func: A0 => A0Out,
       a1func: A1 => A1Out,
     )(
-      implicit basis: Basis.Aux[ThisError, A0 :+: A1 :+: CNil, BasisRest],
+      implicit basis: Basis.Aux[L, A0 :+: A1 :+: CNil, BasisRest],
       unique: Unique.Aux[A0Out :+: A1Out :+: BasisRest, UniqueOut],
-      errorTrans: ErrorTrans[F, ThisError, T],
-    ): F[UniqueOut, T] = {
+      errorTrans: ErrorTrans[F, L, R],
+    ): F[UniqueOut, R] = {
       errorTrans.transformError(in) { err =>
         unique.apply {
           basis(err) match {
@@ -90,10 +116,10 @@ object ErrorTrans extends LowerPriorityErrorTrans {
       ha: A => Out,
       hb: B => Out,
     )(
-      implicit basis: Basis[ThisError, A :+: B :+: CNil],
-      toKnownCop: ThisError =:= (A :+: B :+: CNil),
-      errorTrans: ErrorTrans[F, ThisError, T],
-    ): F[Out, T] = {
+      implicit basis: Basis[L, A :+: B :+: CNil],
+      toKnownCop: L =:= (A :+: B :+: CNil),
+      errorTrans: ErrorTrans[F, L, R],
+    ): F[Out, R] = {
       errorTrans.transformError(in) { err =>
         toKnownCop(err) match {
           case Inl(a)         => ha(a)
@@ -108,10 +134,10 @@ object ErrorTrans extends LowerPriorityErrorTrans {
       hb: B => Out,
       hc: C => Out,
     )(
-      implicit basis: Basis[ThisError, A :+: B :+: C :+: CNil],
-      toKnownCop: ThisError =:= (A :+: B :+: C :+: CNil),
-      errorTrans: ErrorTrans[F, ThisError, T],
-    ): F[Out, T] = {
+      implicit basis: Basis[L, A :+: B :+: C :+: CNil],
+      toKnownCop: L =:= (A :+: B :+: C :+: CNil),
+      errorTrans: ErrorTrans[F, L, R],
+    ): F[Out, R] = {
       errorTrans.transformError(in) { err =>
         toKnownCop(err) match {
           case Inl(a)              => ha(a)

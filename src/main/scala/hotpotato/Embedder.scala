@@ -4,7 +4,7 @@ import shapeless._
 import shapeless.ops.coproduct.Basis
 
 /*
-TODOO: Make something like:
+FIXME: Make something like:
 embedderFor[E1 :+: E2 :+: E3 :+: CNil] { implicit em =>
 }
 Which under the hood reuse instances of the Embedder

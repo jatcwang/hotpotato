@@ -4,7 +4,7 @@ import org.scalatest.{FreeSpec, Matchers}
 import shapeless._
 import Examples._
 
-//TODOO: handleTo[SomeType] => handle all case into a particular type
+//FIXME: handleTo[SomeType] => handle all case into a particular type
 class ErrorHandlingSpec extends FreeSpec with Matchers {
   import ErrorTrans._
   implicit val embedder: Embedder[E1_E2_E3] = Embedder.make
