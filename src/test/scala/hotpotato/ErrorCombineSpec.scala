@@ -18,15 +18,27 @@ class ErrorCombineSpec extends FreeSpec with Matchers {
       _ <- func_E4.embedError
     } yield ()
 
-    result shouldBe Right("")
+    result shouldBe Right(())
 
   }
 
   "flatmap combines error using wrapper" in {
 
-    func_E1_E2_E3.wrap.flatMap(_ => func_E2_E3.wrap)
-
-    func_E1_E2.wrap.flatMap(_ => func_E1_E2_E3.wrap)
+    for {
+      s: String <- func_E1_E2_E3_E4.wrap
+      d: String <- func_E1_E2.wrap
+      _ <- func_E1_E2_E3.wrap
+    } yield ()
+//    func_E1_E2_E3_E4.wrap.flatMap(
+//      _ =>
+//        func_E1_E2.wrap
+//          .flatMap(
+//            _ =>
+//              func_E1_E2_E3.wrap
+//                .map(_ => ()),
+//          ),
+//    )
+//    func_E1_E2.wrap.flatMap(_ => func_E1_E2_E3.wrap)
 
   }
 

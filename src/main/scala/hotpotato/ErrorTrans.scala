@@ -22,39 +22,6 @@ object ErrorTrans extends LowerPriorityErrorTrans {
         fea.leftMap(f)
     }
 
-  //FIXME: need to wrap the other direction
-  class Wrapper[F[_, _], L <: Coproduct, R](val unwrap: F[L, R]) extends AnyVal {
-    def map[RR](func: R => RR)(implicit f: Bifunctor[F]): Wrapper[F, L, RR] = {
-      new Wrapper(f.rightFunctor.map(unwrap)(func))
-    }
-
-    // Case when LL is superset of L
-    def flatMap[G[_], LL <: Coproduct, RR](f: R => Wrapper[F, LL, RR])(
-      implicit
-      funcToBi: FunctorToBifunctor[F, LL, G],
-      basis: Basis[LL, L],
-      gFlatMap: FlatMap[G],
-      fBifunctor: Bifunctor[F],
-    ): Wrapper[F, LL, RR] = {
-      val flatMapFunc: R => G[RR] = f.andThen(wrapper => funcToBi.fromBi(wrapper.unwrap))
-      val leftSideEmbedded: F[LL, R] = unwrap.leftMap(l => basis.inverse(Right(l)))
-      new Wrapper(funcToBi.toBi(funcToBi.fromBi(leftSideEmbedded).flatMap(flatMapFunc)))
-    }
-
-    // Case when LL is a subset of L
-    def flatMap[G[_], LL <: Coproduct, RR](f: R => Wrapper[F, LL, RR])(
-      implicit
-      funcToBi: FunctorToBifunctor[F, L, G],
-      subset: Subset[LL, L],
-      gFlatMap: FlatMap[G],
-      fBifunctor: Bifunctor[F],
-    ): Wrapper[F, L, RR] = {
-      val gr: G[R] = funcToBi.fromBi(unwrap)
-      val ff: R => G[RR] = f.andThen(wrapper => funcToBi.fromBi(wrapper.unwrap.leftMap(ll => subset.embedIn(ll))))
-      new Wrapper(funcToBi.toBi(gr.flatMap(ff)))
-    }
-  }
-
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
     val in: F[L, R],
   ) extends AnyVal {
@@ -154,15 +121,6 @@ object ErrorTrans extends LowerPriorityErrorTrans {
 
 trait LowerPriorityErrorTrans {
   implicit class ErrorTransEmbedOps[F[_, _], ThisError, T](val in: F[ThisError, T]) {
-//    def embedError[Super <: Coproduct](
-//      implicit F: ErrorTrans[F, ThisError, T],
-//      embedder: Embedder[Super],
-//      inject: Inject[Super, ThisError],
-//    ): F[Super, T] =
-//      F.transformError(in) { err =>
-//        inject(err)
-//      }
-
     def handleSomeAdt[
       A0,
       A0Out,

@@ -11,11 +11,13 @@ object Examples {
   final case class E4() extends Exception("e4")
 
   type E1_E2_E3 = E1 :+: E2 :+: E3 :+: CNil
+  type E1_E2 = E1 :+: E2 :+: CNil
   type E1_E2_E3_E4 = E1 :+: E2 :+: E3 :+: E4 :+: CNil
 
   def func_E1: Either[E1, String] = Right("")
   def func_E1_E2: Either[E1 :+: E2 :+: CNil, String] = Right("")
   def func_E1_E2_E3: Either[E1 :+: E2 :+: E3 :+: CNil, String] = Right("")
+  def func_E1_E2_E3_E4: Either[E1 :+: E2 :+: E3 :+: E4 :+: CNil, String] = Right("")
   def func_E1_E3: Either[E1 :+: E2 :+: CNil, String] = Right("")
   def func_E2_E3: Either[E2 :+: E3 :+: CNil, String] = Right("")
   def func_E4: Either[E4, String] = Right("")
