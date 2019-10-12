@@ -3,6 +3,7 @@ package hotpotato
 import cats.{Bifunctor, FlatMap, Functor}
 import cats.data._
 import cats.implicits._
+import hotpotato.coproduct.Unique
 import shapeless._
 import shapeless.ops.coproduct.{Basis, Inject}
 

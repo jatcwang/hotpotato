@@ -1,4 +1,4 @@
-package hotpotato
+package hotpotato.coproduct
 
 import shapeless._
 import shapeless.ops.coproduct.Inject
