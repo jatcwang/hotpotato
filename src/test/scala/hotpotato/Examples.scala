@@ -3,7 +3,6 @@ import shapeless._
 
 object Examples {
 
-
   // Some error types which we will freely combine in our coproduct type
   final case class E1() extends Exception("e1")
   final case class E2() extends Exception("e2")
@@ -12,7 +11,15 @@ object Examples {
 
   type E1_E2_E3 = E1 :+: E2 :+: E3 :+: CNil
   type E1_E2 = E1 :+: E2 :+: CNil
+  type E2_E3 = E2 :+: E3 :+: CNil
+  type E3_E4 = E3 :+: E4 :+: CNil
+  type E2_E3_E4 = E2 :+: E3 :+: E4 :+: CNil
   type E1_E2_E3_E4 = E1 :+: E2 :+: E3 :+: E4 :+: CNil
+
+  val e1: E1 = E1()
+  val e2: E2 = E2()
+  val e3: E3 = E3()
+  val e4: E4 = E4()
 
   def func_E1: Either[E1, String] = Right("")
   def func_E1_E2: Either[E1 :+: E2 :+: CNil, String] = Right("")
