@@ -1,11 +1,12 @@
 package hotpotato
 
-import Examples.{E1_E2_E3, _}
+import shapeless._
+import Examples.{E1_E2_E3, E1_E2_E3_E4, _}
 import org.scalatest.{FreeSpec, Matchers}
 import ErrorTrans._
 import shapeless.ops.coproduct.Basis
-import shapeless.{:+:, Coproduct}
 import cats.implicits._
+import hotpotato.coproduct.SameElem
 
 class ErrorCombineSpec extends FreeSpec with Matchers {
 
@@ -22,23 +23,24 @@ class ErrorCombineSpec extends FreeSpec with Matchers {
 
   }
 
+  "tno" in {
+    import shapeless.ops.coproduct._
+    import SameElem._
+
+    implicitly[SameElem[E1 :+: CNil, E1 :+: CNil]]
+    implicitly[SameElem[E1_E2_E3_E4, E1_E2_E3_E4]]
+    implicitly[SameElem[CNil, CNil]]
+
+    implicitly[SameElem[E2 :+: E1 :+: CNil, E1 :+: E2 :+: E1 :+: CNil]]
+
+  }
+
   "flatmap combines error using wrapper" in {
 
-    for {
-      s: String <- func_E1_E2_E3_E4.wrap
-      d: String <- func_E1_E2.wrap
-      _ <- func_E1_E2_E3.wrap
-    } yield ()
-//    func_E1_E2_E3_E4.wrap.flatMap(
-//      _ =>
-//        func_E1_E2.wrap
-//          .flatMap(
-//            _ =>
-//              func_E1_E2_E3.wrap
-//                .map(_ => ()),
-//          ),
-//    )
-//    func_E1_E2.wrap.flatMap(_ => func_E1_E2_E3.wrap)
+    val vv: Either[E1_E2_E3_E4, Unit] = (for {
+      _ <- func_E1_E2.wrapC[E1_E2_E3_E4]
+      _ <- func_E3_E4.wrap
+    } yield ()).unwrap
 
   }
 

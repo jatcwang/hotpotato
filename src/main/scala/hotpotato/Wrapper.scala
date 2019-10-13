@@ -1,61 +1,56 @@
 package hotpotato
 
-import cats.{Bifunctor, FlatMap}
+import cats.{Bifunctor, FlatMap, Functor}
 import shapeless.Coproduct
 import shapeless.ops.coproduct.Basis
 import cats.implicits._
+import hotpotato.coproduct.{Combine, SameElem}
+
 import scala.language.implicitConversions
 
-class Wrapper[F[_, _], L <: Coproduct, R](val unwrap: F[L, R]) extends AnyVal {
-  def map[RR](func: R => RR)(implicit f: Bifunctor[F]): Wrapper[F, L, RR] =
-    new Wrapper(f.rightFunctor.map(unwrap)(func))
-
-  def flatMap[G[_], LL <: Coproduct, RR](f: SuperMagnet[F, L, LL, R, RR])(
-    implicit
-    funcToBi: FunctorToBifunctor[F, LL, G],
-    gFlatMap: FlatMap[G],
-    fBifunctor: Bifunctor[F],
-  ): Wrapper[F, LL, RR] = {
-    val flatMapFunc: R => G[RR] = f.func.andThen(wr => funcToBi.fromBi(wr.unwrap))
-    val leftSideEmbedded: F[LL, R] = unwrap.leftMap(l => f.basis.inverse(Right(l)))
-    new Wrapper(funcToBi.toBi(funcToBi.fromBi(leftSideEmbedded).flatMap(flatMapFunc)))
+class Wrapper[F[_, _], L <: Coproduct, R](val unwrap: F[L, R]) {
+  final def map[RR](func: R => RR)(implicit functor: Functor[F[L, *]]): Wrapper[F, L, RR] = {
+    val u = unwrap
+    new Wrapper[F, L, RR](u.map(func))
   }
-
-  // Case when LL is a subset of L
-    def flatMap[G[_], LL <: Coproduct, RR](f: SubMagnet[F, L, LL, R, RR])(
-      implicit
-      funcToBi: FunctorToBifunctor[F, L, G],
-      gFlatMap: FlatMap[G],
-      fBifunctor: Bifunctor[F],
-    ): Wrapper[F, L, RR] = {
-      val gr: G[R] = funcToBi.fromBi(unwrap)
-      val ff: R => G[RR] =
-        f.func.andThen(wrapper => funcToBi.fromBi(wrapper.unwrap.leftMap(ll => f.subset.embedIn(ll))))
-      new Wrapper(funcToBi.toBi(gr.flatMap(ff)))
-    }
 }
 
-class SuperMagnet[F[_, _], L <: Coproduct, LL <: Coproduct, -R, RR](
-  val func: R => Wrapper[F, LL, RR],
-  val basis: Basis[LL, L],
-)
-
-object SuperMagnet {
-  implicit def fromBasis[F[_, _], L <: Coproduct, LL <: Coproduct, R, RR](func: R => Wrapper[F, LL, RR])(
-    implicit basis: Basis[LL, L],
-  ): SuperMagnet[F, L, LL, R, RR] = new SuperMagnet[F,L, LL, R, RR](func, basis)
-
+class SubWrapper[F[_, _], L <: Coproduct, R](override val unwrap: F[L, R])
+    extends Wrapper[F, L, R](unwrap) {
+  def flatMap[LL <: Coproduct, RR](func: R => Wrapper[F, LL, RR])(
+    implicit
+    bifunctor: Bifunctor[F],
+    flatMap: FlatMap[F[L, *]],
+    basis: Basis[L, LL],
+  ): SubWrapper[F, L, RR] = {
+    val newFunc: R => F[L, RR] = func.andThen(w => w.unwrap.leftMap(ll => basis.inverse(Right(ll))))
+    new SubWrapper(unwrap.flatMap(newFunc))
+  }
 }
 
-class SubMagnet[F[_, _], L <: Coproduct, LL <: Coproduct, -R, RR](
-  val func: R => Wrapper[F, LL, RR],
-  val subset: Subset[LL, L]
-)
-
-object SubMagnet {
-  implicit def fromSubset[F[_, _], L <: Coproduct, LL <: Coproduct, R, RR](func: R => Wrapper[F, LL, RR])(
-    implicit subset: Subset[LL, L],
-  ): SubMagnet[F, L, LL, R, RR] = new SubMagnet[F,L, LL, R, RR](func, subset)
-
+class SuperWrapper[F[_, _], L <: Coproduct, R](override val unwrap: F[L, R])
+    extends Wrapper[F, L, R](unwrap) {
+  def flatMap[LL <: Coproduct, RR](func: R => Wrapper[F, LL, RR])(
+    implicit
+    bifunctor: Bifunctor[F],
+    flatMap: FlatMap[F[LL, *]],
+    basis: Basis[LL, L],
+  ): SuperWrapper[F, LL, RR] = {
+    val leftMapped: F[LL, R] = unwrap.leftMap(l => basis.inverse(Right(l)))
+    new SuperWrapper(leftMapped.flatMap(func.andThen(_.unwrap)))
+  }
 }
 
+class CombineWrapper[F[_, _], L <: Coproduct, CombL <: Coproduct, R](override val unwrap: F[L, R])
+    extends Wrapper[F, L, R](unwrap) {
+  def flatMap[LL <: Coproduct, RR](func: R => Wrapper[F, LL, RR])(
+    implicit
+    bifunctor: Bifunctor[F],
+    flatMap: FlatMap[F[CombL, *]],
+    combine: Combine.Aux[L, LL, CombL],
+  ): Wrapper[F, CombL, RR] = {
+    val f: F[CombL, R] = unwrap.leftMap(l => combine.right(l))
+    val newFunc: R => F[CombL, RR] = func.andThen(w => w.unwrap.leftMap(ll => combine.left(ll)))
+    new Wrapper(f.flatMap(newFunc))
+  }
+}

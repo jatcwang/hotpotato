@@ -52,9 +52,10 @@ object ErrorTrans extends LowerPriorityErrorTrans {
   implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](val in: F[L, R])
       extends AnyVal {
 
-    def wrap: Wrapper[F, L, R] = {
-      new Wrapper(in)
-    }
+    def wrapC[CombL <: Coproduct]: CombineWrapper[F, L, CombL, R] = new CombineWrapper(in)
+    def wrapSub: SubWrapper[F, L, R] = new SubWrapper(in)
+    def wrapSup: SuperWrapper[F, L, R] = new SuperWrapper(in)
+    def wrap: Wrapper[F, L, R] = new Wrapper(in)
 
     def handleSome[A0, A0Out, A1, A1Out, BasisRest <: Coproduct, UniqueOut <: Coproduct](
       a0func: A0 => A0Out,

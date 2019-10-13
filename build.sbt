@@ -16,7 +16,7 @@ val root = Project("root", file("."))
     scalacOptions ++= Seq(
       "-language:higherKinds",
     ),
+//    addCompilerPlugin("io.tryp" % "splain" % "0.4.1" cross CrossVersion.patch),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary)
-  //addCompilerPlugin("io.tryp" % "splain" % "0.4.0" cross CrossVersion.patch)
   )
