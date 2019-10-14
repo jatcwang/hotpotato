@@ -8,6 +8,19 @@ trait SameElem[C <: Coproduct, CC <: Coproduct] {
 
 object SameElem extends SameElemLowPriority {
 
+  implicit def sameType[C <: Coproduct, CC <: Coproduct](
+    implicit ev: CC =:= C,
+  ): SameElem[C, CC] = new SameElem[C, CC] {
+    override def apply(in: CC): C = ev(in)
+  }
+
+  implicit val cnil: SameElem[CNil, CNil] = new SameElem[CNil, CNil] {
+    override def apply(t: CNil): CNil = t
+  }
+}
+
+trait SameElemLowPriority extends SameElemLowestPriority {
+
   implicit def dupeHeadType[H, T <: Coproduct, RemoveOut <: Coproduct, CC <: Coproduct](
     implicit remove: Remove.Aux[CC, H, RemoveOut],
     injectHIntoCC: Inject[RemoveOut, H],
@@ -20,15 +33,13 @@ object SameElem extends SameElemLowPriority {
       }
   }
 
-  implicit val cnil: SameElem[CNil, CNil] = new SameElem[CNil, CNil] {
-    override def apply(t: CNil): CNil = t
-  }
 }
 
-trait SameElemLowPriority {
+trait SameElemLowestPriority {
   implicit def uniquHeadType[H, T <: Coproduct, RemoveOut <: Coproduct, CC <: Coproduct](
     implicit remove: Remove.Aux[CC, H, RemoveOut],
     tailSameElem: SameElem[T, RemoveOut],
+    notEq: (H :+: T) =:!= CC,
   ): SameElem[H :+: T, CC] = new SameElem[H :+: T, CC] {
     override def apply(cc: CC): H :+: T =
       remove.apply(cc) match {

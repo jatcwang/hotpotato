@@ -38,6 +38,7 @@ object ErrorTrans extends LowerPriorityErrorTrans {
   }
 
   implicit class ErrorTransIdLeftOps[F[_, _], L, R](val in: F[L, R]) extends AnyVal {
+    def wrap(implicit bifunctor: Bifunctor[F], notCoproduct: Refute[L <:< Coproduct]): Wrapper[F, L :+: CNil, R] = new Wrapper(in.leftMap(Inl(_)))
 
     def embedError[Super <: Coproduct](
       implicit F: ErrorTrans[F, L, R],
@@ -48,6 +49,7 @@ object ErrorTrans extends LowerPriorityErrorTrans {
       }
 
   }
+
 
   implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](val in: F[L, R])
       extends AnyVal {
