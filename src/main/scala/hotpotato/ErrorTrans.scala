@@ -6,6 +6,7 @@ import cats.implicits._
 import hotpotato.coproduct.Unique
 import shapeless._
 import shapeless.ops.coproduct.{Basis, Inject}
+import zio._
 
 /** Typeclass for effect type that has an error type and can transform the error to another */
 trait ErrorTrans[F[_, _], L, R] {
@@ -22,6 +23,11 @@ object ErrorTrans extends LowerPriorityErrorTrans {
       override def transformError[EE](fea: EitherT[G, E, A])(f: E => EE): EitherT[G, EE, A] =
         fea.leftMap(f)
     }
+
+  //FIXME: zio optional dep
+  implicit def zioErrorTrans[Env, L, R]: ErrorTrans[ZIO[Env, *, *], L, R] = new ErrorTrans[ZIO[Env, *, *], L, R] {
+    override def transformError[LL](fea: ZIO[Env, L, R])(f: L => LL): ZIO[Env, LL, R] = fea.mapError(f)
+  }
 
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
     val in: F[L, R],
@@ -47,9 +53,7 @@ object ErrorTrans extends LowerPriorityErrorTrans {
       F.transformError(in) { err =>
         inject(err)
       }
-
   }
-
 
   implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](val in: F[L, R])
       extends AnyVal {

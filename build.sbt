@@ -6,9 +6,7 @@ val root = Project("root", file("."))
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       "org.typelevel" %% "cats-core" % "2.0.0",
-      //FIXME:
-      "com.typesafe.akka" %% "akka-http" % "10.1.10",
-      "com.typesafe.akka" %% "akka-stream" % "2.5.25",
+      "org.typelevel" %% "cats-effect" % "2.0.0",
 
       "dev.zio" %% "zio" % "1.0.0-RC13",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
