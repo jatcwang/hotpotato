@@ -35,14 +35,4 @@ class ErrorCombineSpec extends FreeSpec with Matchers {
 
   }
 
-  "flatmap combines error using wrapper" in {
-
-    val vv = (for {
-      _ <- func_E1_E2.wrapC[E1 :+: E2 :+: E3 :+: E4 :+: E1 :+: CNil]
-      _ <- func_E3_E4.wrapC[E3_E4_E1]
-      _ <- func_E1.wrap
-    } yield ()).unwrap
-
-  }
-
 }
