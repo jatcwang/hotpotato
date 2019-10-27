@@ -15,8 +15,8 @@ class ExampleSpec extends WordSpec {
     implicit val embedder: Embedder[Err4[E1, E2, E3, E4]] = Embedder.make[Err4[E1, E2, E3, E4]]
 
     val v: ZIO[Any, Err4[E1, E2, E3, E4], Assertion] = for {
-      _ <- zio_E1.embedError
-      _ <- zio_E1_E2.embedError
+      _ <- g_E1.embedError
+      _ <- g_E1_E2.embedError
     } yield succeed
 
   }
