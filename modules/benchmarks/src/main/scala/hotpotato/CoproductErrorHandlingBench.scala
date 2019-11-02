@@ -38,8 +38,8 @@ class CoproductErrorHandlingBench {
   def copBigHandleSome1: Unit = {
     val io = b_E1to8_1.handleSome(
       (e1: E1) => MSG,
-      (e4: E8) => MSG_8
-      )
+      (e4: E8) => MSG_8,
+    )
     TracedRuntime.unsafeRun(io.either)
   }
 
@@ -47,8 +47,8 @@ class CoproductErrorHandlingBench {
   def copBigHandleSome8: Unit = {
     val io = b_E1to8_8.handleSome(
       (e1: E1) => MSG,
-      (e4: E8) => MSG_8
-      )
+      (e4: E8) => MSG_8,
+    )
     TracedRuntime.unsafeRun(io.either)
   }
 
@@ -57,8 +57,8 @@ class CoproductErrorHandlingBench {
     import shapeless._
     val io = b_allError_8.handleSomeAdt(
       (e1: E1) => MSG,
-      (e4: E8) => MSG_8
-      )
+      (e4: E8) => MSG_8,
+    )
     TracedRuntime.unsafeRun(io.either)
   }
 
@@ -78,6 +78,5 @@ class CoproductErrorHandlingBench {
   //
   //   TracedRuntime.unsafeRun(io.either)
   // }
-
 
 }

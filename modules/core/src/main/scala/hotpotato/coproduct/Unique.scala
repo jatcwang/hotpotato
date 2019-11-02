@@ -21,7 +21,7 @@ object Unique extends LowPriorityUnique {
   implicit def uniqueCCons1[L, R <: Coproduct](
     implicit
     inj: Inject[R, L],
-    unR: Unique[R]
+    unR: Unique[R],
   ): Aux[L :+: R, unR.Out] = new Unique[L :+: R] {
     type Out = unR.Out
 
@@ -36,7 +36,7 @@ object Unique extends LowPriorityUnique {
 class LowPriorityUnique {
   implicit def uniqueCCons0[L, R <: Coproduct](
     implicit
-    unR: Unique[R]
+    unR: Unique[R],
   ): Unique[L :+: R] { type Out = L :+: unR.Out } = new Unique[L :+: R] {
     type Out = L :+: unR.Out
 

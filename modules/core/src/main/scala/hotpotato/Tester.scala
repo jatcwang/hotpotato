@@ -1,8 +1,6 @@
 import scala.language.implicitConversions
 import cats.implicits._
 
-object Tester {
-
-}
+object Tester {}
 
 object Main {}
