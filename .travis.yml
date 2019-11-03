@@ -15,9 +15,8 @@ stages:
      
 jobs:
   include:
-    # stage="test" if no stage is specified
-    - name: compile
-      script: sbt compile
+    - name: test
+      script: sbt test
     - name: formatting
       script: sbt scalafmtCheck test:scalafmtCheck
     - stage: release
