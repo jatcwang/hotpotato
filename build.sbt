@@ -1,6 +1,7 @@
 lazy val root = Project("hotpotato", file("."))
   .aggregate(core, benchmarks)
   .settings(
+    publish / skip := true,
     commonSettings,
   )
 
