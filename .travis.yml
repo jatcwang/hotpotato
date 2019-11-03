@@ -2,6 +2,12 @@ language: scala
 before_install:
   - git fetch --tags
 
+cache:
+  directories:
+    - $HOME/.cache/coursier
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
 stages:
   - name: test
   - name: release
