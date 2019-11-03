@@ -1,4 +1,5 @@
-# coproduct-errors
+# Hotpotato
+[![Release](https://img.shields.io/nexus/r/com.github.jatcwang/hotpotato-core?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/releases/com/github/jatcwang/hotpotato-core_2.13/)
 
 # TODO FIXME
 
