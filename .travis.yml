@@ -15,18 +15,16 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
 
-stages:
-  - name: test
-  - name: release
-    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
-     
 jobs:
   include:
-    - name: test
-      script: sbt +test
-    - name: formatting
+    - stage: test
+      name: test
+      script: sbt +test mdoc
+    - name: format check
       script: sbt scalafmtCheck test:scalafmtCheck
     - stage: release
       script: sbt ci-release
-
-
+      if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
+    - stage: publish docs
+      script: sbt publishMicrosite
+      if: (tag IS present) AND NOT fork
