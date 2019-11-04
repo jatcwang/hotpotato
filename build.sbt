@@ -1,8 +1,24 @@
 lazy val root = Project("hotpotato", file("."))
-  .aggregate(core, benchmarks)
+  .enablePlugins(MicrositesPlugin)
+  .aggregate(core, benchmarks, docs)
   .settings(
     publish / skip := true,
     commonSettings,
+  )
+  .settings(
+    micrositeName := "Hotpotato",
+    micrositeDescription := "Typesafe error handling like you mean it",
+    micrositeUrl := "https://jatcwang.github.io",
+    micrositeBaseUrl := "/hotpotato",
+    micrositeDocumentationUrl := "/hotpotato/docs",
+    micrositeAuthor := "Jacob Wang",
+    micrositeHomepage := "https://47deg.github.io/hotpotato",
+    micrositeTwitterCreator := "@jatcwang",
+    micrositeGithubOwner := "jatcwang",
+    micrositeGithubRepo := "hotpotato",
+    micrositeCompilingDocsTool := WithMdoc,
+    micrositePushSiteWith := GitHub4s,
+    micrositeGithubToken := Some(sys.env("GITHUB_TOKEN")),
   )
 
 lazy val core = moduleProject("core")
@@ -24,6 +40,10 @@ lazy val benchmarks = moduleProject("benchmarks")
     publish / skip := true,
   )
 
+lazy val docs = moduleProject("docs")
+  .dependsOn(core)
+  .enablePlugins(MdocPlugin)
+
 def moduleProject(name: String) =
   Project(s"hotpotato-$name", file(s"modules/$name"))
     .settings(
@@ -40,7 +60,7 @@ def moduleProject(name: String) =
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
-  crossScalaVersions := List("2.12.10", "2.13.1")
+  crossScalaVersions := List("2.12.10", "2.13.1"),
 )
 
 inThisBuild(
