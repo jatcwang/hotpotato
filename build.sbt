@@ -18,7 +18,7 @@ lazy val root = Project("hotpotato", file("."))
     micrositeGithubRepo := "hotpotato",
     micrositeCompilingDocsTool := WithMdoc,
     micrositePushSiteWith := GitHub4s,
-    micrositeGithubToken := Some(sys.env("GITHUB_TOKEN")),
+    micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
   )
 
 lazy val core = moduleProject("core")
@@ -28,7 +28,7 @@ lazy val core = moduleProject("core")
       "org.typelevel" %% "cats-core" % "2.0.0",
       "org.typelevel" %% "cats-effect" % "2.0.0",
       // FIXME optional dep!
-      "dev.zio" %% "zio" % "1.0.0-RC13",
+      "dev.zio" %% "zio" % "1.0.0-RC16",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     ),
   )
@@ -43,6 +43,9 @@ lazy val benchmarks = moduleProject("benchmarks")
 lazy val docs = moduleProject("docs")
   .dependsOn(core)
   .enablePlugins(MdocPlugin)
+  .settings(
+    publish / skip := true,
+  )
 
 def moduleProject(name: String) =
   Project(s"hotpotato-$name", file(s"modules/$name"))
