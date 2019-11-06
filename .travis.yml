@@ -14,6 +14,7 @@ cache:
     - $HOME/.cache/coursier
     - $HOME/.ivy2/cache
     - $HOME/.sbt
+    - $HOME/.rvm
 
 jobs:
   include:
