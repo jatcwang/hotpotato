@@ -1,0 +1,11 @@
+name: Hotpotato
+baseurl: /hotpotato
+description: Typesafe error handling like you mean it
+highlighter: rouge
+docs: true
+collections:
+  tut:
+    output: true
+version: 0.0.3
+org: com.github.jatcwang
+markdown: kramdown
