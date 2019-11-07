@@ -1,6 +1,7 @@
 lazy val root = Project("hotpotato", file("."))
   .enablePlugins(MicrositesPlugin)
-  .aggregate(core, benchmarks, docs)
+  .dependsOn(core, benchmarks)
+  .aggregate(core, benchmarks)
   .settings(
     publish / skip := true,
     commonSettings,
@@ -36,13 +37,6 @@ lazy val core = moduleProject("core")
 lazy val benchmarks = moduleProject("benchmarks")
   .enablePlugins(JmhPlugin)
   .dependsOn(core % "compile->compile;compile->test")
-  .settings(
-    publish / skip := true,
-  )
-
-lazy val docs = moduleProject("docs")
-  .dependsOn(core)
-  .enablePlugins(MdocPlugin)
   .settings(
     publish / skip := true,
   )
