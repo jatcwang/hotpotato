@@ -12,7 +12,7 @@ class ErrorHandlingSpec extends FreeSpec with Matchers {
   "handle all coproduct cases into a single type" in {
     // Exhaustive error handling
     def exec(either: Either[E1_E2_E3, Unit]): Either[String, Unit] =
-      either.handle(
+      either.handle3(
         (s: E1) => "e1",
         (s: E2) => "e2",
         (s: E3) => "e3",

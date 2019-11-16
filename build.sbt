@@ -13,7 +13,7 @@ lazy val root = Project("hotpotato", file("."))
     micrositeBaseUrl := "/hotpotato",
     micrositeDocumentationUrl := "/hotpotato/docs",
     micrositeAuthor := "Jacob Wang",
-    micrositeHomepage := "https://47deg.github.io/hotpotato",
+    micrositeHomepage := "https://jatcwang.github.io/hotpotato",
     micrositeTwitterCreator := "@jatcwang",
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "hotpotato",
@@ -23,6 +23,7 @@ lazy val root = Project("hotpotato", file("."))
   )
 
 lazy val core = moduleProject("core")
+  .enablePlugins(spray.boilerplate.BoilerplatePlugin)
   .settings(
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",

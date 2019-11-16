@@ -1,0 +1,76 @@
+package hotpotato
+import shapeless._
+import shapeless.ops.coproduct.{Basis, Inject}
+import hotpotato.coproduct.Unique
+
+trait ErrorTransSyntax {
+  [#
+  implicit class ErrorTransOps1[F[_, _], [# L1 #], R](in: F[[#L1# :+: ] :+: CNil, R]) {
+    def handle1[OutL](
+      [#func1: L1 => OutL#,
+      ]
+    )(
+      implicit errorTrans: ErrorTrans[F, [#L1# :+: ] :+: CNil, R]
+    ): F[OutL, R] = {
+      errorTrans.transformError(in) {
+        [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e)#
+        ]
+        case [1..#Inr(# ]e[1..#)# ] => e.impossible
+      }
+    }
+  }
+  # ]
+
+  implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](in: F[L, R]) {
+  [1..8#
+    def handleSome[[#L1, L1Out#], BasisRest <: Coproduct, UniqueOut <: Coproduct](
+        [#func1: L1 => L1Out#,
+        ]
+    )(
+      implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
+      unique: Unique.Aux[[#L1Out# :+: ] :+: BasisRest, UniqueOut],
+      errorTrans: ErrorTrans[F, L, R]
+    ): F[UniqueOut, R] = {
+      errorTrans.transformError(in) { err =>
+        unique.apply {
+          basis(err) match {
+            case Left(rest) => rest.extendLeftBy[[#L1Out# :+: ] :+: CNil]
+            case Right(extracted) => {
+              type LOut = [#L1Out# :+: ] :+: BasisRest
+              extracted match {
+                [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => Coproduct[LOut](func1(e))#
+                ]
+                case [1..#Inr(# ]e[1..#)# ] => e.impossible
+              }
+            }
+          }
+        }
+      }
+    }
+    # ]
+
+    [1..8#
+      def handleSomeInto[[#L1#], OutL, BasisRest <: Coproduct](
+        [#func1: L1 => OutL#,
+        ]
+      )(
+        implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
+        errorTrans: ErrorTrans[F, L, R]
+      ): F[OutL :+: BasisRest, R] = {
+        errorTrans.transformError(in) { err =>
+          basis(err) match {
+            case Left(rest) => Inr(rest)
+            case Right(extracted) => {
+              extracted match {
+                [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => Inl(func1(e))#
+                ]
+                case [1..#Inr(# ]e[1..#)# ] => e.impossible
+              }
+            }
+          }
+        }
+      }
+    # ]
+  }
+
+}
