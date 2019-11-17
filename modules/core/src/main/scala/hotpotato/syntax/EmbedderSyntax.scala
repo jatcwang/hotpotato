@@ -8,6 +8,7 @@ object embedder extends EmbedderSyntax
 
 trait EmbedderSyntax {
   implicit class EmbedderIdOps[A](a: A) {
-    def embed[C <: Coproduct](implicit embedder: Embedder[C], inject: Inject[C, A]): C = inject.apply(a)
+    def embed[C <: Coproduct](implicit embedder: Embedder[C], inject: Inject[C, A]): C =
+      inject.apply(a)
   }
 }

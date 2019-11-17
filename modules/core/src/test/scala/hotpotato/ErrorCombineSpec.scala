@@ -1,7 +1,8 @@
 package hotpotato
 
 import shapeless._
-import Examples.{E1_E2_E3, E1_E2_E3_E4, _}
+import Examples._
+import PureExamples._
 import org.scalatest.{FreeSpec, Matchers}
 import ErrorTrans._
 import shapeless.ops.coproduct.Basis
@@ -14,9 +15,9 @@ class ErrorCombineSpec extends FreeSpec with Matchers {
     implicit val embedder: Embedder[E1_E2_E3_E4] = Embedder.make
 
     val result = for {
-      _ <- func_E1_E2.embedError
-      _ <- func_E2_E3.embedError
-      _ <- func_E4.embedError
+      _ <- g_E12.embedError
+      _ <- g_E23.embedError
+      _ <- g_E4.embedError
     } yield ()
 
     result shouldBe Right(())
