@@ -1,11 +1,12 @@
 package hotpotato
 import shapeless._
-import shapeless.ops.coproduct.{Basis, Inject}
+import shapeless.ops.coproduct._
 import hotpotato.coproduct.Unique
+import shapeless.syntax.inject._
 
 trait ErrorTransSyntax {
   [#
-  implicit class ErrorTransOps1[F[_, _], [# L1 #], R](in: F[[#L1# :+: ] :+: CNil, R]) {
+  implicit class ErrorTransCoproductOps1[F[_, _], [# L1 #], R](in: F[[#L1# :+: ] :+: CNil, R]) {
     def handle1[OutL](
       [#func1: L1 => OutL#,
       ]
@@ -21,7 +22,7 @@ trait ErrorTransSyntax {
   }
   # ]
 
-  implicit class ErrorTransOps[F[_, _], L <: Coproduct, R](in: F[L, R]) {
+  implicit class ErrorTransCoproductOps[F[_, _], L <: Coproduct, R](in: F[L, R]) {
   [1..8#
     def handleSome[[#L1, L1Out#], BasisRest <: Coproduct, UniqueOut <: Coproduct](
         [#func1: L1 => L1Out#,
@@ -71,6 +72,66 @@ trait ErrorTransSyntax {
         }
       }
     # ]
+
+    def unifyError[UnifiedL](
+      implicit errorTrans: ErrorTrans[F, L, R],
+      unifier: Unifier.Aux[L, UnifiedL]
+    ): F[UnifiedL, R] = {
+      errorTrans.transformError(in) { err =>
+        unifier(err)
+      }
+    }
+  }
+
+  implicit class ErrorTransOps[F[_, _], L, R](in: F[L, R]) {
+     [1..8#
+     def handleSomeAdt[[#L1, L1Out#], LCopRepr <: Coproduct, LCopRest <: Coproduct](
+        [#func1: L1 => L1Out#,
+        ]
+     )(
+       implicit errorTrans: ErrorTrans[F, L, R],
+       gen: Generic.Aux[L, LCopRepr],
+       basisRemoveFromAdt: Basis.Aux[LCopRepr, [#L1 :+:# ] CNil, LCopRest]
+     ): F[[#L1Out :+:# ] LCopRest, R] = {
+       errorTrans.transformError(in) { err =>
+         basisRemoveFromAdt(gen.to(err)) match {
+           case Left(lcopRest) => lcopRest.extendLeftBy[[#L1Out :+:# ] CNil]
+           case Right(handledCases) => {
+             type FinalL = [#L1Out :+:# ] LCopRest
+             handledCases match {
+              [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e).inject[FinalL]#
+              ]
+              case [1..#Inr(# ]e[1..#)# ] => e.impossible
+             }
+           }
+         }
+       }
+     }
+     # ]
+
+     [1..8#
+     def handleSomeAdtInto[[#L1#], OutL, LCopRepr <: Coproduct, LCopRest <: Coproduct](
+       [#func1: L1 => OutL#,
+       ]
+     )(
+       implicit errorTrans: ErrorTrans[F, L, R],
+       gen: Generic.Aux[L, LCopRepr],
+       basisRemoveFromAdt: Basis.Aux[LCopRepr, [#L1 :+:# ] CNil, LCopRest]
+     ): F[OutL :+: LCopRest, R] = {
+       errorTrans.transformError(in) { err =>
+         basisRemoveFromAdt(gen.to(err)) match {
+           case Left(lcopRest) => lcopRest.extendLeft[OutL]
+           case Right(handledCases) => {
+             handledCases match {
+              [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => Inl(func1(e))#
+              ]
+              case [1..#Inr(# ]e[1..#)# ] => e.impossible
+             }
+           }
+         }
+       }
+     }
+     # ]
   }
 
 }

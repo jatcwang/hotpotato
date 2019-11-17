@@ -7,6 +7,7 @@ import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUn
 import zio._
 import ErrorTrans._
 import hotpotato.Examples._
+import hotpotato.ZioExamples._
 import BenchmarkSetup.TracedRuntime
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

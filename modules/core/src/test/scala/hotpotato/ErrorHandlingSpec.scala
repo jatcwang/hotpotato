@@ -38,7 +38,7 @@ class ErrorHandlingSpec extends FreeSpec with Matchers {
     exec(Left(Coproduct[E1_E2_E3](E1()))) shouldBe Left(Coproduct[ResultError](E1()))
   }
 
-  "Handle only some cases from a sealed trait. Unhandled cases will appear in the result coproduct" in {
+  "Handle only some cases from a sealed trait (each into a different type). Unhandled cases will appear in the result coproduct" in {
     type ResultError = String :+: Int :+: Child3 :+: CNil
 
     def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
@@ -49,6 +49,19 @@ class ErrorHandlingSpec extends FreeSpec with Matchers {
 
     exec(Left(Child1())) shouldBe Left(Coproduct[ResultError]("child1"))
     exec(Left(Child2())) shouldBe Left(Coproduct[ResultError](0))
+    exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
+  }
+
+  "Handle ony some cases of a sealed trait into one type. Unhandled cases will appear in the final ADT" in {
+    type ResultError = String :+: Child3 :+: CNil
+    def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
+      err.handleSomeAdtInto(
+        (c: Child1) => "child1",
+        (c: Child2) => "child2"
+      )
+
+    exec(Left(Child1())) shouldBe Left(Coproduct[ResultError]("child1"))
+    exec(Left(Child2())) shouldBe Left(Coproduct[ResultError]("child2"))
     exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
   }
 }

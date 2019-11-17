@@ -1,6 +1,8 @@
 package hotpotato
 import shapeless._
+import shapeless.syntax.inject._
 import shapeless.ops.coproduct.Inject
+import Examples._
 
 object Examples {
 
@@ -9,14 +11,22 @@ object Examples {
   val MSG_8: String = "MSG_8"
 
   // Some error types which we will freely combine in our coproduct type
-  sealed trait AllErrors extends Serializable
+  sealed trait AllErrors extends Product with Serializable
+
   final case class E1() extends AllErrors
+
   final case class E2() extends AllErrors
+
   final case class E3() extends AllErrors
+
   final case class E4() extends AllErrors
+
   final case class E5() extends AllErrors
+
   final case class E6() extends AllErrors
+
   final case class E7() extends AllErrors
+
   final case class E8() extends AllErrors
 
   type E1_E2_E3    = E1 :+: E2 :+: E3 :+: CNil
@@ -38,15 +48,39 @@ object Examples {
   val e7: E7 = E7()
   val e8: E8 = E8()
 
-  def func_E1: Either[E1, String]                                        = Right("")
-  def func_E1_E2: Either[E1 :+: E2 :+: CNil, String]                     = Right("")
-  def func_E1_E2_E3: Either[E1 :+: E2 :+: E3 :+: CNil, String]           = Right("")
-  def func_E1_E2_E3_E4: Either[E1 :+: E2 :+: E3 :+: E4 :+: CNil, String] = Right("")
-  def func_E1_E3: Either[E1 :+: E2 :+: CNil, String]                     = Right("")
-  def func_E2_E3: Either[E2 :+: E3 :+: CNil, String]                     = Right("")
-  def func_E3_E4: Either[E3_E4, String]                                  = Right("")
-  def func_E4: Either[E4, String]                                        = Right("")
+  type Err1[E1]             = E1 :+: Throwable :+: CNil
+  type Err2[E1, E2]         = E1 :+: E2 :+: CNil
+  type Err3[E1, E2, E3]     = E1 :+: E2 :+: E3 :+: CNil
+  type Err4[E1, E2, E3, E4] = E1 :+: E2 :+: E3 :+: E4 :+: CNil
 
+  // Another layer of error which our layer 1 errors may need to unify into
+  // (e.g. hiding internal errors)
+  type F1_F2 = F1 :+: F2 :+: CNil
+  case class F1(msg: String) extends Exception(msg)
+  case class F2(msg: String) extends Exception(msg)
+
+  sealed trait Sealed
+  final case class Child1() extends Sealed
+  final case class Child2() extends Sealed
+  final case class Child3() extends Sealed
+}
+
+object PureExamples {
+
+  def g_E1: Either[E1, String]                                  = Right("")
+  def g_E12: Either[E1 :+: E2 :+: CNil, String]                 = Right("")
+  def g_E123: Either[E1 :+: E2 :+: E3 :+: CNil, String]         = Right("")
+  def g_E1234: Either[E1 :+: E2 :+: E3 :+: E4 :+: CNil, String] = Right("")
+  def g_E13: Either[E1 :+: E2 :+: CNil, String]                 = Right("")
+  def g_E23: Either[E2 :+: E3 :+: CNil, String]                 = Right("")
+  def g_E34: Either[E3_E4, String]                              = Right("")
+  def g_E4: Either[E4, String]                                  = Right("")
+
+  def b_E12_1: Either[E1_E2, String] = Left(e1.inject)
+
+}
+
+object ZioExamples {
   import zio.IO
   def g_E1: IO[E1, String]                            = IO.succeed("")
   def g_E1_E2: IO[Err2[E1, E2], String]               = IO.succeed("")
@@ -67,20 +101,4 @@ object Examples {
   val b_E1to8_1: IO[E1to8, String]          = IO.fail(Inject[E1to8, E1].apply(e1))
   val b_E1to8_8: IO[E1to8, String]          = IO.fail(Inject[E1to8, E8].apply(e8))
   val b_E34: IO[E3 :+: E4 :+: CNil, String] = IO.fail(Inr(Inl(e4)))
-
-  type Err1[E1]             = E1 :+: Throwable :+: CNil
-  type Err2[E1, E2]         = E1 :+: E2 :+: CNil
-  type Err3[E1, E2, E3]     = E1 :+: E2 :+: E3 :+: CNil
-  type Err4[E1, E2, E3, E4] = E1 :+: E2 :+: E3 :+: E4 :+: CNil
-
-  // Another layer of error which our layer 1 errors may need to unify into
-  // (e.g. hiding internal errors)
-  type F1_F2 = F1 :+: F2 :+: CNil
-  case class F1(msg: String) extends Exception(msg)
-  case class F2(msg: String) extends Exception(msg)
-
-  sealed trait Sealed
-  final case class Child1() extends Sealed
-  final case class Child2() extends Sealed
-  final case class Child3() extends Sealed
 }
