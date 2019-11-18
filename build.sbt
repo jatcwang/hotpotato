@@ -1,6 +1,7 @@
 lazy val root = Project("hotpotato", file("."))
   .enablePlugins(MicrositesPlugin)
-  .aggregate(core, benchmarks, docs)
+  .dependsOn(core, benchmarks)
+  .aggregate(core, benchmarks)
   .settings(
     publish / skip := true,
     commonSettings,
@@ -12,7 +13,7 @@ lazy val root = Project("hotpotato", file("."))
     micrositeBaseUrl := "/hotpotato",
     micrositeDocumentationUrl := "/hotpotato/docs",
     micrositeAuthor := "Jacob Wang",
-    micrositeHomepage := "https://47deg.github.io/hotpotato",
+    micrositeHomepage := "https://jatcwang.github.io/hotpotato",
     micrositeTwitterCreator := "@jatcwang",
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "hotpotato",
@@ -22,6 +23,7 @@ lazy val root = Project("hotpotato", file("."))
   )
 
 lazy val core = moduleProject("core")
+  .enablePlugins(spray.boilerplate.BoilerplatePlugin)
   .settings(
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
@@ -36,13 +38,6 @@ lazy val core = moduleProject("core")
 lazy val benchmarks = moduleProject("benchmarks")
   .enablePlugins(JmhPlugin)
   .dependsOn(core % "compile->compile;compile->test")
-  .settings(
-    publish / skip := true,
-  )
-
-lazy val docs = moduleProject("docs")
-  .dependsOn(core)
-  .enablePlugins(MdocPlugin)
   .settings(
     publish / skip := true,
   )
