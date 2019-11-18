@@ -1,15 +1,14 @@
 package hotpotato
 
-import org.scalatest.{FreeSpec, Matchers}
+import hotpotato.Examples._
+import org.scalatest.{Matchers, WordSpec}
 import shapeless._
-import Examples._
 
-//FIXME: handleTo[SomeType] => handle all case into a particular type
-class ErrorHandlingSpec extends FreeSpec with Matchers {
+class ErrorHandlingSpec extends WordSpec with Matchers {
   import ErrorTrans._
   implicit val embedder: Embedder[E1_E2_E3] = Embedder.make
 
-  "handle all coproduct cases into a single type" in {
+  "handleX should handle all coproduct cases into a single type" in {
     // Exhaustive error handling
     def exec(either: Either[E1_E2_E3, Unit]): Either[String, Unit] =
       either.handle3(
@@ -24,18 +23,38 @@ class ErrorHandlingSpec extends FreeSpec with Matchers {
 
   }
 
-  "handle some cases in a coproduct, resulting in a coproduct consisting of converted types plus unhandled cases" in {
-    type ResultError = String :+: Int :+: E1 :+: CNil
+  "handleSomeX" should {
 
-    def exec(either: Either[E1_E2_E3, Unit]): Either[ResultError, Unit] =
-      either.handleSome(
-        (e: E3) => "e3",
-        (e: E2) => 0,
-      )
+    "handle some cases (each into a different type), with the result type being the unique combination of all types + the unhandled cases" in {
+      type ResultError = String :+: Int :+: E1 :+: CNil
 
-    exec(Left(Coproduct[E1_E2_E3](E3()))) shouldBe Left(Coproduct[ResultError]("e3"))
-    exec(Left(Coproduct[E1_E2_E3](E2()))) shouldBe Left(Coproduct[ResultError](0))
-    exec(Left(Coproduct[E1_E2_E3](E1()))) shouldBe Left(Coproduct[ResultError](E1()))
+      def exec(either: Either[E1_E2_E3, Unit]): Either[ResultError, Unit] =
+        either.handleSome(
+          (e: E3) => "e3",
+          (e: E2) => 0,
+        )
+
+      exec(Left(Coproduct[E1_E2_E3](E1()))) shouldBe Left(Coproduct[ResultError](E1()))
+      exec(Left(Coproduct[E1_E2_E3](E2()))) shouldBe Left(Coproduct[ResultError](0))
+      exec(Left(Coproduct[E1_E2_E3](E3()))) shouldBe Left(Coproduct[ResultError]("e3"))
+    }
+
+    "handle some cases (each into a different type), with deduplication of output types" in {
+      type ResultError = String :+: Int :+: E1 :+: CNil
+
+      def exec(either: Either[E1_E2_E3_E4, Unit]): Either[String :+: Int :+: E1 :+: CNil, Unit] =
+        either.handleSome(
+          (e: E3) => "e3",
+          (e: E2) => "e2",
+          (e: E4) => 0,
+        )
+
+      exec(Left(Coproduct[E1_E2_E3_E4](E1()))) shouldBe Left(Coproduct[ResultError](E1()))
+      exec(Left(Coproduct[E1_E2_E3_E4](E2()))) shouldBe Left(Coproduct[ResultError]("e2"))
+      exec(Left(Coproduct[E1_E2_E3_E4](E3()))) shouldBe Left(Coproduct[ResultError]("e3"))
+      exec(Left(Coproduct[E1_E2_E3_E4](E4()))) shouldBe Left(Coproduct[ResultError](0))
+    }
+
   }
 
   "Handle only some cases from a sealed trait (each into a different type). Unhandled cases will appear in the result coproduct" in {

@@ -1,13 +1,13 @@
 package hotpotato
 
-import cats.Functor
+import cats.{Bifunctor, Functor}
 import cats.data._
 import cats.implicits._
 import shapeless._
 import shapeless.ops.coproduct.{Basis, Inject}
 import zio._
 
-/** Typeclass for effect type that has an error type and can transform the error to another */
+/** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
 trait ErrorTrans[F[_, _], L, R] {
   def transformError[LL](fea: F[L, R])(f: L => LL): F[LL, R]
 }
@@ -39,6 +39,8 @@ object ErrorTrans extends ErrorTransSyntax {
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
     val in: F[L, R],
   ) extends AnyVal {
+
+    /** Embed a coproduct into a larger (or equivalent) coproduct */
     def embedError[Super <: Coproduct](
       implicit F: ErrorTrans[F, L, R],
       embedder: Embedder[Super],
@@ -52,13 +54,21 @@ object ErrorTrans extends ErrorTransSyntax {
 
   implicit class ErrorTransIdLeftOps[F[_, _], L, R](val in: F[L, R]) extends AnyVal {
 
+    /** Embed a single non-coproduct type into the coproduct */
     def embedError[Super <: Coproduct](
       implicit F: ErrorTrans[F, L, R],
-      inject: Inject[Super, L],
+      embedder: Embedder[Super], // Used for type inference only
+      inject: Inject[Super, L]
     ): F[Super, R] =
       F.transformError(in) { err =>
         inject(err)
       }
   }
 
+}
+
+trait ErrorTransLowerPrioInstances {
+  implicit def bifunctorErrorTrans[F[_, _], L, R](implicit bi: Bifunctor[F]): ErrorTrans[F, L, R] = new ErrorTrans[F, L, R] {
+    override def transformError[LL](flr: F[L, R])(f: L => LL): F[LL, R] = bi.leftMap(flr)(f)
+  }
 }

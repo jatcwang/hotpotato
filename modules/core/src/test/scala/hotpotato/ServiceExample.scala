@@ -5,7 +5,6 @@ import zio._
 import shapeless._
 
 import collection.mutable
-import shapeless.syntax.inject._
 import hotpotato.syntax.embedder._
 import ErrorTrans._
 

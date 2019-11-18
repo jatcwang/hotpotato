@@ -23,7 +23,7 @@ lazy val root = Project("hotpotato", file("."))
   )
 
 lazy val core = moduleProject("core")
-  .enablePlugins(spray.boilerplate.BoilerplatePlugin)
+  .enablePlugins(BoilerplatePlugin)
   .settings(
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",

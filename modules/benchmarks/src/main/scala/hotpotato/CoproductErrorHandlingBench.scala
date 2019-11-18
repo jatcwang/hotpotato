@@ -14,27 +14,6 @@ import BenchmarkSetup.TracedRuntime
 @BenchmarkMode(Array(Mode.Throughput))
 class CoproductErrorHandlingBench {
 
-  // @Benchmark
-  // def copHandleAll: Unit = {
-  //   val io = b_E1234_4.handle(
-  //     (e1: E1) => MSG,
-  //     (e2: E2) => MSG,
-  //     (e3: E3)  => MSG,
-  //     (e4: E4) => MSG
-  //     )
-  //   TracedRuntime.unsafeRun(io.either)
-  // }
-
-  // @Benchmark
-  // def copHandleSome: Unit = {
-  //   val io = b_E1234_4.handleSome(
-  //     (e1: E1) => MSG,
-  //     (e4: E4) => MSG_4
-  //     )
-  //   TracedRuntime.unsafeRun(io.either)
-  // }
-  //
-  //
   @Benchmark
   def copBigHandleSome1: Unit = {
     val io = b_E1to8_1.handleSome(
