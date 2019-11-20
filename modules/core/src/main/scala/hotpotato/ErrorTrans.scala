@@ -1,6 +1,6 @@
 package hotpotato
 
-import cats.{Bifunctor, Functor}
+import cats.{Bifunctor, FlatMap, Functor, Monad}
 import cats.data._
 import cats.implicits._
 import shapeless._
@@ -9,28 +9,51 @@ import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
 trait ErrorTrans[F[_, _]] {
-  def transformError[L, R, LL](fea: F[L, R])(f: L => LL): F[LL, R]
+  def transformError[L, R, LL](in: F[L, R])(func: L  => LL): F[LL, R]
+  def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
 }
 
 object ErrorTrans extends ErrorTransSyntax {
   implicit def eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
-      override def transformError[L, R, LL](fea: Either[L, R])(
+      override def transformError[L, R, LL](func: Either[L, R])(
         f: L => LL,
-      ): Either[LL, R] = fea.leftMap(f)
+      ): Either[LL, R] = func.leftMap(f)
+
+      override def transformErrorF[L, R, LL](in: Either[L, R])(
+        func: L => Either[LL, R],
+      ): Either[LL, R] =
+        in match {
+          case Left(l)      => func(l)
+          case r @ Right(_) => r.leftCast[LL]
+        }
     }
 
-  implicit def eitherTErrorTrans[G[_]: Functor]: ErrorTrans[EitherT[G, *, *]] =
+  implicit def eitherTErrorTrans[G[_]](implicit gMonad: Monad[G]): ErrorTrans[EitherT[G, *, *]] =
     new ErrorTrans[EitherT[G, *, *]] {
-      override def transformError[L, R, LL](fea: EitherT[G, L, R])(f: L => LL): EitherT[G, LL, R] = fea.leftMap(f)
+      override def transformError[L, R, LL](in: EitherT[G, L, R])(
+        func: L => LL,
+      ): EitherT[G, LL, R] = in.leftMap(func)
+
+      override def transformErrorF[L, R, LL](
+        in: EitherT[G, L, R],
+      )(func: L => EitherT[G, LL, R]): EitherT[G, LL, R] =
+        EitherT(gMonad.flatMap(in.value) {
+          case Left(l)      => func(l).value
+          case r @ Right(_) => gMonad.pure(r.leftCast[LL])
+        })
     }
 
   //FIXME: zio optional dep
-  implicit def zioErrorTrans[Env, L, R]: ErrorTrans[ZIO[Env, *, *]] =
+  implicit def zioErrorTrans[Env]: ErrorTrans[ZIO[Env, *, *]] =
     new ErrorTrans[ZIO[Env, *, *]] {
-      override def transformError[L, R, LL](fea: ZIO[Env, L, R])(
-        f: L => LL,
-      ): ZIO[Env, LL, R] = fea.mapError(f)
+      override def transformError[L, R, LL](in: ZIO[Env, L, R])(
+        func: L => LL,
+      ): ZIO[Env, LL, R] = in.mapError(func)
+
+      override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
+        func: L => ZIO[Env, LL, R],
+      ): ZIO[Env, LL, R] = in.catchAll(func)
     }
 
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
@@ -55,17 +78,11 @@ object ErrorTrans extends ErrorTransSyntax {
     def embedError[Super <: Coproduct](
       implicit F: ErrorTrans[F],
       embedder: Embedder[Super], // Used for type inference only
-      inject: Inject[Super, L]
+      inject: Inject[Super, L],
     ): F[Super, R] =
       F.transformError(in) { err =>
         inject(err)
       }
   }
 
-}
-
-trait ErrorTransLowerPrioInstances {
-  implicit def bifunctorErrorTrans[F[_, _]](implicit bi: Bifunctor[F]): ErrorTrans[F] = new ErrorTrans[F] {
-    override def transformError[L, R, LL](flr: F[L, R])(f: L => LL): F[LL, R] = bi.leftMap(flr)(f)
-  }
 }
