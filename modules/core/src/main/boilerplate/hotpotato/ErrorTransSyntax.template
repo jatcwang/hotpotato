@@ -19,6 +19,19 @@ trait ErrorTransSyntax {
         case [1..#Inr(# ]e[1..#)# ] => e.impossible
       }
     }
+
+    def handle1With[OutL](
+      [#func1: L1 => F[OutL, R]#,
+      ]
+    )(
+      implicit errorTrans: ErrorTrans[F]
+    ): F[OutL, R] = {
+      errorTrans.transformErrorF(in) {
+        [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e)#
+        ]
+        case [1..#Inr(# ]e[1..#)# ] => e.impossible
+      }
+    }
   }
   # ]
 
@@ -50,6 +63,35 @@ trait ErrorTransSyntax {
     }
     # ]
 
+  // FIXME: tests
+  [1..8#
+    def handleSomeWith[[#L1, L1Out#], BasisRest <: Coproduct, UniqueOut <: Coproduct](
+        [#func1: L1 => F[L1Out, R]#,
+        ]
+    )(
+      implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
+      unique: Unique.Aux[[#L1Out# :+: ] :+: BasisRest, UniqueOut],
+      errorTrans: ErrorTrans[F]
+    ): F[UniqueOut, R] = {
+      errorTrans.transformErrorF(in) { err =>
+        basis(err) match {
+          case Left(rest) => errorTrans.pureError(unique.apply(rest.extendLeftBy[[#L1Out# :+: ] :+: CNil]))
+          case Right(extracted) => {
+            type LOut = [#L1Out# :+: ] :+: BasisRest
+            extracted match {
+              [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.bimap(func1(e))(
+                lxOut => unique.apply(Coproduct[LOut](lxOut)),
+                identity
+              )#
+              ]
+              case [1..#Inr(# ]e[1..#)# ] => e.impossible
+            }
+          }
+        }
+      }
+    }
+    # ]
+
     [1..8#
       def handleSomeInto[[#L1#], OutL, BasisRest <: Coproduct](
         [#func1: L1 => OutL#,
@@ -73,6 +115,7 @@ trait ErrorTransSyntax {
       }
     # ]
 
+    /** Unify all coproduct error types into the common parent type ("least upper bound") */
     def unifyError[UnifiedL](
       implicit errorTrans: ErrorTrans[F],
       unifier: Unifier.Aux[L, UnifiedL]
@@ -132,6 +175,15 @@ trait ErrorTransSyntax {
        }
      }
      # ]
+
+    /**
+     * Split an error (which is a sealed trait) into its coproduct representation
+     * (A coproduct of its children types)
+     */
+    def splitError[LCopRepr <: Coproduct](
+      implicit errorTrans: ErrorTrans[F],
+        gen: Generic.Aux[L, LCopRepr]
+    ): F[LCopRepr, R] = errorTrans.transformError(in)(l => gen.to(l))
   }
 
 }

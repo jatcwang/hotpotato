@@ -8,7 +8,8 @@ import shapeless.ops.coproduct.{Basis, Inject}
 import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
-trait ErrorTrans[F[_, _]] {
+trait ErrorTrans[F[_, _]] extends Bifunctor[F] {
+  def pureError[L, R](l: L): F[L, R]
   def transformError[L, R, LL](in: F[L, R])(func: L  => LL): F[LL, R]
   def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
 }
@@ -27,6 +28,11 @@ object ErrorTrans extends ErrorTransSyntax {
           case Left(l)      => func(l)
           case r @ Right(_) => r.leftCast[LL]
         }
+
+      override def bimap[A, B, C, D](in: Either[A, B])(f: A => C, g: B => D): Either[C, D] =
+        cats.instances.either.catsStdBitraverseForEither.bimap(in)(f, g)
+
+      override def pureError[L, R](l: L): Either[L, R] = Left(l)
     }
 
   implicit def eitherTErrorTrans[G[_]](implicit gMonad: Monad[G]): ErrorTrans[EitherT[G, *, *]] =
@@ -42,6 +48,11 @@ object ErrorTrans extends ErrorTransSyntax {
           case Left(l)      => func(l).value
           case r @ Right(_) => gMonad.pure(r.leftCast[LL])
         })
+
+      override def bimap[A, B, C, D](in: EitherT[G, A, B])(f: A => C, g: B => D): EitherT[G, C, D] =
+        in.bimap(f, g)
+
+      override def pureError[L, R](l: L): EitherT[G, L, R] = EitherT.leftT[G, R].apply(l)
     }
 
   //FIXME: zio optional dep
@@ -54,6 +65,11 @@ object ErrorTrans extends ErrorTransSyntax {
       override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
         func: L => ZIO[Env, LL, R],
       ): ZIO[Env, LL, R] = in.catchAll(func)
+
+      override def bimap[A, B, C, D](in: ZIO[Env, A, B])(f: A => C, g: B => D): ZIO[Env, C, D] =
+        in.bimap(f, g)
+
+      override def pureError[L, R](l: L): ZIO[Env, L, R] = ZIO.fail(l)
     }
 
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
