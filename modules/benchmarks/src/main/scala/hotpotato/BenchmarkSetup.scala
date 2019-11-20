@@ -5,6 +5,6 @@ import zio.internal.{PlatformLive, Tracing}
 
 object BenchmarkSetup {
   val TracedRuntime: DefaultRuntime = new DefaultRuntime {
-    override val Platform = PlatformLive.Benchmark.withTracing(Tracing.enabled)
+    override val platform = PlatformLive.Benchmark.withTracing(Tracing.enabled)
   }
 }

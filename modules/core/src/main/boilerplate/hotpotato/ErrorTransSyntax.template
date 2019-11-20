@@ -11,7 +11,7 @@ trait ErrorTransSyntax {
       [#func1: L1 => OutL#,
       ]
     )(
-      implicit errorTrans: ErrorTrans[F, [#L1# :+: ] :+: CNil, R]
+      implicit errorTrans: ErrorTrans[F]
     ): F[OutL, R] = {
       errorTrans.transformError(in) {
         [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e)#
@@ -30,7 +30,7 @@ trait ErrorTransSyntax {
     )(
       implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
       unique: Unique.Aux[[#L1Out# :+: ] :+: BasisRest, UniqueOut],
-      errorTrans: ErrorTrans[F, L, R]
+      errorTrans: ErrorTrans[F]
     ): F[UniqueOut, R] = {
       errorTrans.transformError(in) { err =>
         unique.apply {
@@ -56,7 +56,7 @@ trait ErrorTransSyntax {
         ]
       )(
         implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
-        errorTrans: ErrorTrans[F, L, R]
+        errorTrans: ErrorTrans[F]
       ): F[OutL :+: BasisRest, R] = {
         errorTrans.transformError(in) { err =>
           basis(err) match {
@@ -74,7 +74,7 @@ trait ErrorTransSyntax {
     # ]
 
     def unifyError[UnifiedL](
-      implicit errorTrans: ErrorTrans[F, L, R],
+      implicit errorTrans: ErrorTrans[F],
       unifier: Unifier.Aux[L, UnifiedL]
     ): F[UnifiedL, R] = {
       errorTrans.transformError(in) { err =>
@@ -89,7 +89,7 @@ trait ErrorTransSyntax {
         [#func1: L1 => L1Out#,
         ]
      )(
-       implicit errorTrans: ErrorTrans[F, L, R],
+       implicit errorTrans: ErrorTrans[F],
        gen: Generic.Aux[L, LCopRepr],
        basisRemoveFromAdt: Basis.Aux[LCopRepr, [#L1 :+:# ] CNil, LCopRest]
      ): F[[#L1Out :+:# ] LCopRest, R] = {
@@ -114,7 +114,7 @@ trait ErrorTransSyntax {
        [#func1: L1 => OutL#,
        ]
      )(
-       implicit errorTrans: ErrorTrans[F, L, R],
+       implicit errorTrans: ErrorTrans[F],
        gen: Generic.Aux[L, LCopRepr],
        basisRemoveFromAdt: Basis.Aux[LCopRepr, [#L1 :+:# ] CNil, LCopRest]
      ): F[OutL :+: LCopRest, R] = {

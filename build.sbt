@@ -30,7 +30,8 @@ lazy val core = moduleProject("core")
       "org.typelevel" %% "cats-core" % "2.0.0",
       "org.typelevel" %% "cats-effect" % "2.0.0",
       // FIXME optional dep!
-      "dev.zio" %% "zio" % "1.0.0-RC16",
+      "dev.zio" %% "zio" % "1.0.0-RC17",
+      "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC8",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     ),
   )
