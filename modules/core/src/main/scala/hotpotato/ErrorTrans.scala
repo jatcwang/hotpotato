@@ -8,19 +8,16 @@ import shapeless.ops.coproduct.{Basis, Inject}
 import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
-trait ErrorTrans[F[_, _]] extends Bifunctor[F] {
+trait ErrorTrans[F[_, _]]{
   def pureError[L, R](l: L): F[L, R]
-  def transformError[L, R, LL](in: F[L, R])(func: L  => LL): F[LL, R]
+  def bimap[L, R, LL, RR](fab: F[L, R])(f: L => LL, g: R => RR): F[LL, RR]
   def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
+  def transformError[L, R, LL](in: F[L, R])(func: L  => LL): F[LL, R] = bimap(in)(func, identity)
 }
 
 object ErrorTrans extends ErrorTransSyntax {
   implicit def eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
-      override def transformError[L, R, LL](func: Either[L, R])(
-        f: L => LL,
-      ): Either[LL, R] = func.leftMap(f)
-
       override def transformErrorF[L, R, LL](in: Either[L, R])(
         func: L => Either[LL, R],
       ): Either[LL, R] =
