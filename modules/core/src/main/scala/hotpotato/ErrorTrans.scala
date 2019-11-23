@@ -1,6 +1,6 @@
 package hotpotato
 
-import cats.Monad
+import cats.{Monad, MonadError}
 import cats.data._
 import cats.implicits._
 import shapeless._
@@ -16,12 +16,14 @@ trait ErrorTrans[F[_, _]] {
 }
 
 trait ErrorTransThrow[F[_, _]] extends ErrorTrans[F] {
-  def extractAndThrow[L, E <: Throwable, R, LL](in: F[L, R])(extractUnhandled: L => Either[E, LL]): F[LL, R]
+  def extractAndThrow[L, E <: Throwable, R, LL](in: F[L, R])(
+    extractUnhandled: L => Either[E, LL],
+  ): F[LL, R]
 }
 
-object ErrorTrans extends ErrorTransSyntax {
+object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
 
-  implicit def eitherErrorTrans: ErrorTrans[Either] =
+  implicit val eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
       override def transformErrorF[L, R, LL](in: Either[L, R])(
         func: L => Either[LL, R],
@@ -37,52 +39,14 @@ object ErrorTrans extends ErrorTransSyntax {
       override def pureError[L, R](l: L): Either[L, R] = Left(l)
     }
 
-  //FIXME: ErrorTransThrow instance if MonadError
-  implicit def eitherTErrorTrans[G[_]](implicit gMonad: Monad[G]): ErrorTrans[EitherT[G, *, *]] =
-    new ErrorTrans[EitherT[G, *, *]] {
-      override def transformError[L, R, LL](in: EitherT[G, L, R])(
-        func: L => LL,
-      ): EitherT[G, LL, R] = in.leftMap(func)
-
-      override def transformErrorF[L, R, LL](
-        in: EitherT[G, L, R],
-      )(func: L => EitherT[G, LL, R]): EitherT[G, LL, R] =
-        EitherT(gMonad.flatMap(in.value) {
-          case Left(l)      => func(l).value
-          case r @ Right(_) => gMonad.pure(r.leftCast[LL])
-        })
-
-      override def bimap[A, B, C, D](in: EitherT[G, A, B])(f: A => C, g: B => D): EitherT[G, C, D] =
-        in.bimap(f, g)
-
-      override def pureError[L, R](l: L): EitherT[G, L, R] = EitherT.leftT[G, R].apply(l)
-    }
+  implicit def eitherTErrorTransThrow[G[_]](
+    implicit G: MonadError[G, Throwable],
+  ): ErrorTransThrow[EitherT[G, *, *]] =
+    new EitherTErrorTransThrow[G]
 
   //FIXME: zio optional dep
   implicit def zioErrorTrans[Env]: ErrorTransThrow[ZIO[Env, *, *]] =
-    new ErrorTransThrow[ZIO[Env, *, *]] {
-      override def transformError[L, R, LL](in: ZIO[Env, L, R])(
-        func: L => LL,
-      ): ZIO[Env, LL, R] = in.mapError(func)
-
-      override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
-        func: L => ZIO[Env, LL, R],
-      ): ZIO[Env, LL, R] = in.catchAll(func)
-
-      override def bimap[A, B, C, D](in: ZIO[Env, A, B])(f: A => C, g: B => D): ZIO[Env, C, D] =
-        in.bimap(f, g)
-
-      override def pureError[L, R](l: L): ZIO[Env, L, R] = ZIO.fail(l)
-
-      override def extractAndThrow[L, E <: Throwable, R, LL](in: ZIO[Env, L, R])(
-        extractUnhandled: L => Either[E, LL],
-      ): ZIO[Env, LL, R] = in.catchAll { errors =>
-        extractUnhandled(errors) match {
-          case Left(throwable) => ZIO.die(throwable)
-          case Right(handledErrors) => ZIO.fail(handledErrors)
-        }
-      }
-    }
+    new ZioErrorTransThrow[Env]
 
   implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
     val in: F[L, R],
@@ -113,4 +77,70 @@ object ErrorTrans extends ErrorTransSyntax {
       }
   }
 
+}
+
+private[hotpotato] trait ErrorTransLowerInstances {
+
+  implicit def eitherTErrorTrans[M[_]](implicit M: Monad[M]): ErrorTrans[EitherT[M, *, *]] =
+    new EitherTErrorTransInstance[M]
+
+}
+
+private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
+    extends ErrorTrans[EitherT[M, *, *]] {
+
+  override def pureError[L, R](l: L): EitherT[M, L, R] = EitherT.leftT[M, R].apply(l)
+
+  override def transformError[L, R, LL](in: EitherT[M, L, R])(
+    func: L => LL,
+  ): EitherT[M, LL, R] = in.leftMap(func)
+
+  override def transformErrorF[L, R, LL](
+    in: EitherT[M, L, R],
+  )(func: L => EitherT[M, LL, R]): EitherT[M, LL, R] =
+    EitherT(M.flatMap(in.value) {
+      case Left(l)      => func(l).value
+      case r @ Right(_) => M.pure(r.leftCast[LL])
+    })
+
+  override def bimap[A, B, C, D](in: EitherT[M, A, B])(f: A => C, g: B => D): EitherT[M, C, D] =
+    in.bimap(f, g)
+
+}
+
+private[hotpotato] class EitherTErrorTransThrow[M[_]](implicit M: MonadError[M, Throwable])
+    extends EitherTErrorTransInstance[M]
+    with ErrorTransThrow[EitherT[M, *, *]] {
+  override def extractAndThrow[L, E <: Throwable, R, LL](in: EitherT[M, L, R])(
+    extractUnhandled: L => Either[E, LL],
+  ): EitherT[M, LL, R] = transformErrorF(in) { l =>
+    extractUnhandled(l) match {
+      case Left(throwable) => EitherT(M.raiseError(throwable))
+      case Right(errors)   => EitherT.leftT[M, R].apply(errors)
+    }
+  }
+}
+
+private[hotpotato] class ZioErrorTransThrow[Env] extends ErrorTransThrow[ZIO[Env, *, *]] {
+  override def transformError[L, R, LL](in: ZIO[Env, L, R])(
+    func: L => LL,
+  ): ZIO[Env, LL, R] = in.mapError(func)
+
+  override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
+    func: L => ZIO[Env, LL, R],
+  ): ZIO[Env, LL, R] = in.catchAll(func)
+
+  override def bimap[A, B, C, D](in: ZIO[Env, A, B])(f: A => C, g: B => D): ZIO[Env, C, D] =
+    in.bimap(f, g)
+
+  override def pureError[L, R](l: L): ZIO[Env, L, R] = ZIO.fail(l)
+
+  override def extractAndThrow[L, E <: Throwable, R, LL](in: ZIO[Env, L, R])(
+    extractUnhandled: L => Either[E, LL],
+  ): ZIO[Env, LL, R] = in.catchAll { errors =>
+    extractUnhandled(errors) match {
+      case Left(throwable)      => ZIO.die(throwable)
+      case Right(handledErrors) => ZIO.fail(handledErrors)
+    }
+  }
 }
