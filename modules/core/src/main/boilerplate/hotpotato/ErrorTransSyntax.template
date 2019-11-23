@@ -2,7 +2,9 @@ package hotpotato
 import shapeless._
 import shapeless.ops.coproduct._
 import hotpotato.coproduct.Unique
+import hotpotato.utils.DummyParam
 import shapeless.syntax.inject._
+import cats.implicits._
 
 trait ErrorTransSyntax {
   [#
@@ -124,6 +126,32 @@ trait ErrorTransSyntax {
         unifier(err)
       }
     }
+
+    // Special implementation of throw1 because shapeless Unifier doesn't support upcasting
+    // coproduct with single element
+    def dieIf[L1 <: Throwable](
+      implicit errorTransThrow: ErrorTransThrow[F],
+      remove: Remove[L, L1]
+    ): F[remove.Rest, R] = {
+      errorTransThrow.extractAndThrow(in) { errors =>
+        remove(errors)
+      }
+    }
+
+    [2..8#
+    def dieIf[[#L1#]](
+      implicit errorTransThrow: ErrorTransThrow[F],
+      basis: Basis[L, [#L1 :+:# ] CNil],
+      unifier: Unifier.Aux[[#L1# :+: ] :+: CNil, Throwable],
+      [2..#dummy0: DummyParam#,
+      ]
+    ): F[basis.Rest, R] = {
+      errorTransThrow.extractAndThrow(in) { errors =>
+        basis.apply(errors).swap.leftMap(unifier.apply(_))
+      }
+    }
+    # ]
+
   }
 
   implicit class ErrorTransOps[F[_, _], L, R](in: F[L, R]) {
