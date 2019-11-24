@@ -33,7 +33,7 @@ object Examples {
 
   type E1_E2_E3    = E1 :+: E2 :+: E3 :+: CNil
   type E3_E4_E1    = E3 :+: E4 :+: E1 :+: CNil
-  type E24       = E2 :+: E4 :+: CNil
+  type E24         = E2 :+: E4 :+: CNil
   type E1_E2       = E1 :+: E2 :+: CNil
   type E234        = E2 :+: E3 :+: E4 :+: CNil
   type E2_E3       = E2 :+: E3 :+: CNil

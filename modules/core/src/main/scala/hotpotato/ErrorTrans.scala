@@ -1,6 +1,6 @@
 package hotpotato
 
-import cats.{Monad, MonadError}
+import cats.{Bifunctor, Monad, MonadError}
 import cats.data._
 import cats.implicits._
 import shapeless._
@@ -9,10 +9,12 @@ import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
 trait ErrorTrans[F[_, _]] {
+
+  // Bifunctor instance is hidden to prevent ambiguous implicit error
+  def bifunctor: Bifunctor[F]
+
   def pureError[L, R](l: L): F[L, R]
-  def bimap[L, R, LL, RR](fab: F[L, R])(f: L         => LL, g: R => RR): F[LL, RR]
   def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
-  def transformError[L, R, LL](in: F[L, R])(func: L  => LL): F[LL, R] = bimap(in)(func, identity)
 }
 
 trait ErrorTransThrow[F[_, _]] extends ErrorTrans[F] {
@@ -25,6 +27,8 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
 
   implicit val eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
+      override val bifunctor: Bifunctor[Either] = cats.instances.either.catsStdBitraverseForEither
+
       override def transformErrorF[L, R, LL](in: Either[L, R])(
         func: L => Either[LL, R],
       ): Either[LL, R] =
@@ -32,9 +36,6 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
           case Left(l)      => func(l)
           case r @ Right(_) => r.leftCast[LL]
         }
-
-      override def bimap[A, B, C, D](in: Either[A, B])(f: A => C, g: B => D): Either[C, D] =
-        cats.instances.either.catsStdBitraverseForEither.bimap(in)(f, g)
 
       override def pureError[L, R](l: L): Either[L, R] = Left(l)
     }
@@ -58,7 +59,7 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
       embedder: Embedder[Super],
       basis: Basis[Super, L],
     ): F[Super, R] =
-      F.transformError(in) { err =>
+      F.bifunctor.leftMap(in) { err =>
         embedder.embed[L](err)(basis)
       }
 
@@ -72,7 +73,7 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
       embedder: Embedder[Super], // Used for type inference only
       inject: Inject[Super, L],
     ): F[Super, R] =
-      F.transformError(in) { err =>
+      F.bifunctor.leftMap(in) { err =>
         inject(err)
       }
   }
@@ -89,11 +90,9 @@ private[hotpotato] trait ErrorTransLowerInstances {
 private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
     extends ErrorTrans[EitherT[M, *, *]] {
 
-  override def pureError[L, R](l: L): EitherT[M, L, R] = EitherT.leftT[M, R].apply(l)
+  override val bifunctor: Bifunctor[EitherT[M, *, *]] = EitherT.catsDataBifunctorForEitherT[M]
 
-  override def transformError[L, R, LL](in: EitherT[M, L, R])(
-    func: L => LL,
-  ): EitherT[M, LL, R] = in.leftMap(func)
+  override def pureError[L, R](l: L): EitherT[M, L, R] = EitherT.leftT[M, R].apply(l)
 
   override def transformErrorF[L, R, LL](
     in: EitherT[M, L, R],
@@ -102,9 +101,6 @@ private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
       case Left(l)      => func(l).value
       case r @ Right(_) => M.pure(r.leftCast[LL])
     })
-
-  override def bimap[A, B, C, D](in: EitherT[M, A, B])(f: A => C, g: B => D): EitherT[M, C, D] =
-    in.bimap(f, g)
 
 }
 
@@ -122,16 +118,12 @@ private[hotpotato] class EitherTErrorTransThrow[M[_]](implicit M: MonadError[M, 
 }
 
 private[hotpotato] class ZioErrorTransThrow[Env] extends ErrorTransThrow[ZIO[Env, *, *]] {
-  override def transformError[L, R, LL](in: ZIO[Env, L, R])(
-    func: L => LL,
-  ): ZIO[Env, LL, R] = in.mapError(func)
+
+  override val bifunctor: Bifunctor[ZIO[Env, *, *]] = zio.interop.catz.bifunctorInstance[Env]
 
   override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
     func: L => ZIO[Env, LL, R],
   ): ZIO[Env, LL, R] = in.catchAll(func)
-
-  override def bimap[A, B, C, D](in: ZIO[Env, A, B])(f: A => C, g: B => D): ZIO[Env, C, D] =
-    in.bimap(f, g)
 
   override def pureError[L, R](l: L): ZIO[Env, L, R] = ZIO.fail(l)
 
