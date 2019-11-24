@@ -6,6 +6,7 @@ import hotpotato.utils.DummyParam
 import shapeless.syntax.inject._
 import cats.implicits._
 
+// FIXME add function to catch NonFatal and inject into coproduct error
 trait ErrorTransSyntax {
   [#
   implicit class ErrorTransCoproductOps1[F[_, _], [# L1 #], R](in: F[[#L1# :+: ] :+: CNil, R]) {
