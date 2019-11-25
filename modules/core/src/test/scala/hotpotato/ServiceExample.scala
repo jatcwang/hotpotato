@@ -69,7 +69,7 @@ object ServiceExample {
       implicit val embedder: Embedder[NotAuthorized :+: InvalidCreationData :+: CNil] =
         Embedder.make
       for {
-        user <- userService.findUser(ctx.userId).handle1(s => NotAuthorized().embed)
+        user <- userService.findUser(ctx.userId).mapError1(s => NotAuthorized().embed)
         docId <- if (user.role == Creator) {
                   IO.effectTotal {
                     val doc =

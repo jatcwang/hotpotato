@@ -23,7 +23,7 @@ lazy val core = moduleProject("core")
   )
 
 lazy val docs = project
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;compile->test")
   .enablePlugins(MicrositesPlugin)
   .settings(
     commonSettings,

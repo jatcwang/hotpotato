@@ -11,7 +11,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
   "handleX should handle all coproduct cases into a single type" in {
     // Exhaustive error handling
     def exec(either: Either[E1_E2_E3, Unit]): Either[String, Unit] =
-      either.handle3(
+      either.mapError3(
         (s: E1) => "e1",
         (s: E2) => "e2",
         (s: E3) => "e3",
@@ -23,13 +23,13 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
 
   }
 
-  "handleSomeX" should {
+  "mapSomeError" should {
 
     "handle some cases (each into a different type), with the result type being the unique combination of all types + the unhandled cases" in {
       type ResultError = String :+: Int :+: E1 :+: CNil
 
       def exec(either: Either[E1_E2_E3, Unit]): Either[ResultError, Unit] =
-        either.handleSome(
+        either.mapSomeError(
           (e: E3) => "e3",
           (e: E2) => 0,
         )
@@ -43,7 +43,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
       type ResultError = String :+: Int :+: E1 :+: CNil
 
       def exec(either: Either[E1_E2_E3_E4, Unit]): Either[String :+: Int :+: E1 :+: CNil, Unit] =
-        either.handleSome(
+        either.mapSomeError(
           (e: E3) => "e3",
           (e: E2) => "e2",
           (e: E4) => 0,
@@ -61,7 +61,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
     type ResultError = String :+: Int :+: Child3 :+: CNil
 
     def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-      err.handleSomeAdt(
+      err.mapSomeAdtError(
         (c: Child1) => "child1",
         (c: Child2) => 0,
       )
@@ -74,7 +74,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
   "Handle ony some cases of a sealed trait into one type. Unhandled cases will appear in the final ADT" in {
     type ResultError = String :+: Child3 :+: CNil
     def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-      err.handleSomeAdtInto(
+      err.mapSomeAdtError(
         (c: Child1) => "child1",
         (c: Child2) => "child2",
       )

@@ -53,7 +53,7 @@ object Examples {
   val e7: E7 = E7()
   val e8: E8 = E8()
 
-  type Err1[E1]             = E1 :+: Throwable :+: CNil
+  type Err1[E1]             = E1 :+: CNil
   type Err2[E1, E2]         = E1 :+: E2 :+: CNil
   type Err3[E1, E2, E3]     = E1 :+: E2 :+: E3 :+: CNil
   type Err4[E1, E2, E3, E4] = E1 :+: E2 :+: E3 :+: E4 :+: CNil
@@ -82,6 +82,7 @@ object PureExamples {
   def g_E4: Either[E4, String]                                  = Right("")
 
   def b_E12_1: Either[E1_E2, String] = Left(e1.inject)
+  def b_E123_1: Either[E1_E2_E3, String] = Left(e1.inject)
 
 }
 
