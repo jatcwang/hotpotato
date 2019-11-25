@@ -30,9 +30,18 @@ class ErrorTransInstanceSpec extends AnyFunSuite with Discipline {
     override def eqv(x: Throwable, y: Throwable): Boolean = x == y
   }
 
+  // For fixing compile errors in 2.12
+  type EThrow[A] = Either[Throwable, A]
+  implicit val errorTrans: ErrorTransThrow[EitherT[EThrow, *, *]] =
+    hotpotato.ErrorTrans.eitherTErrorTransThrow[EThrow]
+  implicit def arb[A: Arbitrary, B: Arbitrary]: Arbitrary[EitherT[EThrow, A, B]] =
+    catsLawsArbitraryForEitherT[EThrow, A, B]
+  implicit def eqeq[A: Eq, B: Eq]: Eq[EitherT[EThrow, A, B]] =
+    EitherT.catsDataEqForEitherT[EThrow, A, B]
+
   checkAll(
     "EitherT.ErrorTransThrowLaws",
-    ErrorTransThrowTests[EitherT[Either[Throwable, *], *, *]]
+    ErrorTransThrowTests[EitherT[EThrow, *, *]]
       .errorTransThrow[Int, Int, Int, String, String, String],
   )
 }
