@@ -81,7 +81,7 @@ object PureExamples {
   def g_E34: Either[E3_E4, String]                              = Right("")
   def g_E4: Either[E4, String]                                  = Right("")
 
-  def b_E12_1: Either[E1_E2, String] = Left(e1.inject)
+  def b_E12_1: Either[E1_E2, String]     = Left(e1.inject)
   def b_E123_1: Either[E1_E2_E3, String] = Left(e1.inject)
 
 }
