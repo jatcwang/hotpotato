@@ -14,7 +14,7 @@ trait ErrorTrans[F[_, _]] {
   def bifunctor: Bifunctor[F]
 
   def pureError[L, R](l: L): F[L, R]
-  def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
+  def flatMapError[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R]
 }
 
 trait ErrorTransThrow[F[_, _]] extends ErrorTrans[F] {
@@ -29,7 +29,7 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
     new ErrorTrans[Either] {
       override val bifunctor: Bifunctor[Either] = cats.instances.either.catsStdBitraverseForEither
 
-      override def transformErrorF[L, R, LL](in: Either[L, R])(
+      override def flatMapError[L, R, LL](in: Either[L, R])(
         func: L => Either[LL, R],
       ): Either[LL, R] =
         in match {
@@ -94,7 +94,7 @@ private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
 
   override def pureError[L, R](l: L): EitherT[M, L, R] = EitherT.leftT[M, R].apply(l)
 
-  override def transformErrorF[L, R, LL](
+  override def flatMapError[L, R, LL](
     in: EitherT[M, L, R],
   )(func: L => EitherT[M, LL, R]): EitherT[M, LL, R] =
     EitherT(M.flatMap(in.value) {
@@ -109,7 +109,7 @@ private[hotpotato] class EitherTErrorTransThrow[M[_]](implicit M: MonadError[M, 
     with ErrorTransThrow[EitherT[M, *, *]] {
   override def extractAndThrow[L, E <: Throwable, R, LL](in: EitherT[M, L, R])(
     extractUnhandled: L => Either[E, LL],
-  ): EitherT[M, LL, R] = transformErrorF(in) { l =>
+  ): EitherT[M, LL, R] = flatMapError(in) { l =>
     extractUnhandled(l) match {
       case Left(throwable) => EitherT(M.raiseError(throwable))
       case Right(errors)   => EitherT.leftT[M, R].apply(errors)
@@ -121,7 +121,7 @@ private[hotpotato] class ZioErrorTransThrow[Env] extends ErrorTransThrow[ZIO[Env
 
   override val bifunctor: Bifunctor[ZIO[Env, *, *]] = zio.interop.catz.bifunctorInstance[Env]
 
-  override def transformErrorF[L, R, LL](in: ZIO[Env, L, R])(
+  override def flatMapError[L, R, LL](in: ZIO[Env, L, R])(
     func: L => ZIO[Env, LL, R],
   ): ZIO[Env, LL, R] = in.catchAll(func)
 

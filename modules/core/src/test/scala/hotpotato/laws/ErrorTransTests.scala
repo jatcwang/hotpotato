@@ -12,7 +12,7 @@ trait ErrorTransLaws[F[_, _]] extends BifunctorLaws[F] {
   implicit def F: ErrorTrans[F] with Bifunctor[F]
 
   def transformErrorFpureErrorEquiv[L, R](in: F[L, R]): IsEq[F[L, R]] =
-    F.transformErrorF(in)(e => F.pureError(e)) <-> in
+    F.flatMapError(in)(e => F.pureError(e)) <-> in
 
 }
 
@@ -55,8 +55,8 @@ object ErrorTransTests {
 
             override def pureError[L, R](l: L): F[L, R] = FF.pureError(l)
 
-            override def transformErrorF[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R] =
-              FF.transformErrorF(in)(func)
+            override def flatMapError[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R] =
+              FF.flatMapError(in)(func)
 
             override def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D] =
               FF.bifunctor.bimap(fab)(f, g)

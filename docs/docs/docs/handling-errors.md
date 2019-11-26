@@ -27,7 +27,8 @@ import hotpotato.ErrorTrans._
 ```scala mdoc
 val result: Either[E1 :+: E2 :+: E3 :+: CNil, String] = returnsE1()
 
-result.mapError3(
+// 3 errors in our coproduct, so we use mapError3
+result.mapErrorInto(
   e1 => "e1",
   e2 => "e2",
   e3 => "e3"
