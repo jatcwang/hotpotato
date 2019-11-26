@@ -6,6 +6,6 @@ docs: true
 collections:
   tut:
     output: true
-version: 0.0.5
+version: 0.0.5+1-66dab21d+20191126-2154-SNAPSHOT
 org: com.github.jatcwang
 markdown: kramdown
