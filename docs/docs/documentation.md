@@ -6,5 +6,5 @@ position: 2
 ---
 
 <script>
-window.location.href = "docs/intro/"
+window.location.href = "docs/intro"
 </script>

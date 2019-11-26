@@ -1,6 +1,6 @@
 options:
   - title: Getting Started
-    url: docs/
+    url: docs/intro
   - title: Concepts
     url: docs/concepts
   - title: Handling Errors

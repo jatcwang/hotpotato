@@ -10,7 +10,7 @@ Hotpotato gives you a lot of flexibility when it comes to handling errors.
 
 ## handling all errors into the same type
 
-Use `mapError1`, `mapError2`, etc (where the number corresponds to the number of errors you have)
+Use `mapErrorInto`
 
 ```scala mdoc:invisible
 import hotpotato.PureExamples._
@@ -27,13 +27,15 @@ import hotpotato.ErrorTrans._
 ```scala mdoc
 val result: Either[E1 :+: E2 :+: E3 :+: CNil, String] = returnsE1()
 
-// 3 errors in our coproduct, so we use mapError3
 result.mapErrorInto(
   e1 => "e1",
   e2 => "e2",
   e3 => "e3"
 )
 ```
+
+There is `flatMapErrorInto`, if your error transformation returns :action GotoClass
+
 
 ## Handling all errors but into different types
 

@@ -1,7 +1,7 @@
 ---
 layout: docs
 title:  "Introduction"
-permalink: docs
+permalink: docs/intro
 ---
 
 Some intro
