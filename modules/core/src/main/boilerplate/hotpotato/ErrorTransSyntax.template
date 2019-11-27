@@ -24,6 +24,23 @@ trait ErrorTransSyntax {
     }
 
     //FIXME: tests
+    def mapErrorAll[[#L1Out#]](
+      [#func1: L1 => L1Out#,
+      ]
+    )(
+      implicit unique: Unique[[#L1Out :+:# ] CNil],
+      errorTrans: ErrorTrans[F]
+    ): F[unique.Out, R] = {
+      errorTrans.bifunctor.leftMap(in) { err =>
+        type LOut = [#L1Out :+: # ] CNil
+        err match {
+          [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => unique(func1(e).inject[LOut])# ]
+          case [1..#Inr(# ]e[1..#)# ] => e.impossible
+        }
+      }
+    }
+
+    //FIXME: tests
     def flatMapErrorInto[OutL](
       [#func1: L1 => F[OutL, R]#,
       ]
@@ -34,6 +51,23 @@ trait ErrorTransSyntax {
         [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e)#
         ]
         case [1..#Inr(# ]e[1..#)# ] => e.impossible
+      }
+    }
+
+    //FIXME: tests
+    def flatMapErrorAll[[#L1Out#]](
+      [#func1: L1 => F[L1Out, R]#,
+      ]
+    )(
+      implicit unique: Unique[[#L1Out :+:# ] CNil],
+      errorTrans: ErrorTrans[F]
+    ): F[unique.Out, R] = {
+      errorTrans.flatMapError(in) { err =>
+        type LOut = [#L1Out :+: # ] CNil
+        err match {
+          [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.bifunctor.bimap(func1(e))(eOut => unique(eOut.inject[LOut]), identity)# ]
+          case [1..#Inr(# ]e[1..#)# ] => e.impossible
+        }
       }
     }
   }
@@ -92,8 +126,28 @@ trait ErrorTransSyntax {
           }
         }
       }
+    }# ]
+
+    [1..8#
+    def handleSomeError[[#L1#], BasisRest <: Coproduct](
+      [#func1: L1 => F[Nothing, Unit]#,
+      ]
+    )(
+      implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
+      errorTrans: ErrorTrans[F]
+    ): F[BasisRest, R] = {
+      errorTrans.flatMapError(in) { err =>
+        basis(err) match {
+          case Left(rest) => errorTrans.pureError[BasisRest, R](rest)
+          case Right(handledErrors) => handledErrors match {
+            [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e).asInstanceOf[F[BasisRest, R]]# ]
+            case [1..#Inr(# ]e[1..#)# ] => e.impossible
+          }
+        }
+      }
     }
-    # ]
+    #
+    ]
 
     //FIXME: handleAndRemoveSomeWith to do e.g. logging for certain errors and remove it
     /** Unify all coproduct error types into the common parent type ("least upper bound") */
@@ -106,12 +160,12 @@ trait ErrorTransSyntax {
       }
     }
 
-    // Special implementation of throw1 because shapeless Unifier doesn't support upcasting
-    // coproduct with single element
     def dieIf[L1 <: Throwable](
       implicit errorTransThrow: ErrorTransThrow[F],
       remove: Remove[L, L1]
     ): F[remove.Rest, R] = {
+    // Special implementation of throw1 because shapeless Unifier doesn't support upcasting
+    // coproduct with single element
       errorTransThrow.extractAndThrow(in) { errors =>
         remove(errors)
       }

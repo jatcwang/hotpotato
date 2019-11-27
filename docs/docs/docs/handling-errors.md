@@ -6,6 +6,35 @@ permalink: docs/handling-errors
 
 Hotpotato gives you a lot of flexibility when it comes to handling errors.
 
+Below is a table of the type of handling and what methods you can use
+
+<table class="error-handling-table">
+  <tr>
+    <td style="border: none"></td>
+    <td colspan="2">Converting Errors</td>
+    <td colspan="2">Handling Errors</td>
+  </tr>
+  <tr>
+    <td style="border: none"></td>
+    <td>Some</td>
+    <td>All</td>
+    <td>Some</td>
+    <td>All</td>
+  </tr>
+  <tr>
+    <td>Pure</td>
+    <td>mapSomeError</td>
+    <td>mapAllError</td>
+  </tr>
+  <tr>
+    <td>Effectful</td>
+    <td>flatMapSomeError</td>
+    <td>flatMapAllError</td>
+    <td>handleSomeError</td>
+    <td>flatMapErrorInto</td>
+  </tr>
+</table>
+
 # Handling all errors
 
 ## handling all errors into the same type
