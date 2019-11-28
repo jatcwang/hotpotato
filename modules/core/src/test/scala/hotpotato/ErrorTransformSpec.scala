@@ -9,7 +9,7 @@ import cats.implicits._
 import hotpotato.util.AssertType
 import zio.Exit
 
-class ErrorHandlingSpec extends AnyWordSpec with Matchers {
+class ErrorTransformSpec extends AnyWordSpec with Matchers {
   import ErrorTrans._
   implicit val embedder: Embedder[E123] = Embedder.make
 
