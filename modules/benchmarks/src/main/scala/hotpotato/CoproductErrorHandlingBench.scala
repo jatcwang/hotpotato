@@ -32,16 +32,6 @@ class CoproductErrorHandlingBench {
     TracedRuntime.unsafeRun(io.either)
   }
 
-  @Benchmark
-  def copBigMapAdtSome: Unit = {
-    import shapeless._
-    val io = b_allError_8.mapErrorSomeAdt(
-      (e1: E1) => MSG,
-      (e4: E8) => MSG_8,
-    )
-    TracedRuntime.unsafeRun(io.either)
-  }
-
   //
   // @Benchmark
   // def copHandleBaseline: Unit = {

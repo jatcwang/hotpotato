@@ -73,36 +73,6 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
 
   }
 
-  "mapErrorSomeAdt" should {
-    "Handle only some cases from a sealed trait (each into a different type). Unhandled cases will appear in the result coproduct" in {
-      type ResultError = String :+: Int :+: Child3 :+: CNil
-
-      def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-        err.mapErrorSomeAdt(
-          (_: Child1) => "child1",
-          (_: Child2) => 0,
-        )
-
-      exec(Left(child1)) shouldBe Left(Coproduct[ResultError]("child1"))
-      exec(Left(Child2())) shouldBe Left(Coproduct[ResultError](0))
-      exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
-    }
-
-    "Handle ony some cases of a sealed trait into one type. Unhandled cases will appear in the final ADT" in {
-      type ResultError = String :+: Child3 :+: CNil
-
-      def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-        err.mapErrorSomeAdt(
-          (_: Child1) => "child1",
-          (_: Child2) => "child2",
-        )
-
-      exec(Left(child1)) shouldBe Left(Coproduct[ResultError]("child1"))
-      exec(Left(Child2())) shouldBe Left(Coproduct[ResultError]("child2"))
-      exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
-    }
-  }
-
   "mapErrorAllInto" should {
     import PureExamples._
 
@@ -340,4 +310,14 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
       exec(Left(child3)) shouldBe Left(child3.inject[ExpectedError])
     }
   }
+
+  "errorIs should assert the type of the error (used when IDE cannot infer the type)" in {
+    import PureExamples._
+
+    g_E123.errorIs[E1 :+: E2 :+: E3 :+: CNil] shouldBe Right("")
+    b_E123_1.errorIs[E1 :+: E2 :+: E3 :+: CNil] shouldBe Left(e1.inject[E123])
+    b_E123_2.errorIs[E1 :+: E2 :+: E3 :+: CNil] shouldBe Left(e2.inject[E123])
+    b_E123_3.errorIs[E1 :+: E2 :+: E3 :+: CNil] shouldBe Left(e3.inject[E123])
+  }
+
 }

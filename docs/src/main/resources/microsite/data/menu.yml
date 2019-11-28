@@ -5,3 +5,5 @@ options:
     url: docs/concepts
   - title: Handling Errors
     url: docs/handling-errors
+  - title: FAQ
+    url: docs/faq
