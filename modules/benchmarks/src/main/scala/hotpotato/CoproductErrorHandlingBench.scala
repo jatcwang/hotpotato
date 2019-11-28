@@ -15,8 +15,8 @@ import BenchmarkSetup.TracedRuntime
 class CoproductErrorHandlingBench {
 
   @Benchmark
-  def copBigMapSomeError1: Unit = {
-    val io = b_E1to8_1.mapSomeError(
+  def copBigMapErrorSome1: Unit = {
+    val io = b_E1to8_1.mapErrorSome(
       (e1: E1) => MSG,
       (e4: E8) => MSG_8,
     )
@@ -24,8 +24,8 @@ class CoproductErrorHandlingBench {
   }
 
   @Benchmark
-  def copBigMapSomeError8: Unit = {
-    val io = b_E1to8_8.mapSomeError(
+  def copBigMapErrorSome8: Unit = {
+    val io = b_E1to8_8.mapErrorSome(
       (e1: E1) => MSG,
       (e4: E8) => MSG_8,
     )
@@ -33,9 +33,9 @@ class CoproductErrorHandlingBench {
   }
 
   @Benchmark
-  def copBigMapSomeErrorAdt: Unit = {
+  def copBigMapAdtSome: Unit = {
     import shapeless._
-    val io = b_allError_8.mapSomeAdtError(
+    val io = b_allError_8.mapErrorSomeAdt(
       (e1: E1) => MSG,
       (e4: E8) => MSG_8,
     )

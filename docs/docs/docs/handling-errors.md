@@ -8,30 +8,44 @@ Hotpotato gives you a lot of flexibility when it comes to handling errors.
 
 Below is a table of the type of handling and what methods you can use
 
+<style>
+    .error-handling-table td{
+      text-align: center;
+    }
+    
+    .error-handling-table .left {
+      text-align: left;
+    }
+    
+    .bold {
+      font-weight: bold;
+    }
+</style>
+
 <table class="error-handling-table">
   <tr>
     <td style="border: none"></td>
-    <td colspan="2">Converting Errors</td>
-    <td colspan="2">Handling Errors</td>
+    <td colspan="2" class="bold">Converting Errors</td>
+    <td colspan="2" class="bold">Handling Errors</td>
   </tr>
   <tr>
     <td style="border: none"></td>
-    <td>Some</td>
-    <td>All</td>
-    <td>Some</td>
-    <td>All</td>
+    <td class="bold">Some</td>
+    <td class="bold">All</td>
+    <td class="bold">Some</td>
+    <td class="bold">All</td>
   </tr>
   <tr>
-    <td>Pure</td>
-    <td>mapSomeError</td>
-    <td>mapAllError</td>
+    <td class="left bold">Pure</td>
+    <td>mapErrorSome</td>
+    <td>mapErrorAll</td>
   </tr>
   <tr>
-    <td>Effectful</td>
-    <td>flatMapSomeError</td>
-    <td>flatMapAllError</td>
-    <td>handleSomeError</td>
-    <td>flatMapErrorInto</td>
+    <td class="left bold">Effectful</td>
+    <td>flatMapErrorSome</td>
+    <td>flatMapErrorAll</td>
+    <td>handleErrorSome</td>
+    <td>flatMapErrorAllInto</td>
   </tr>
 </table>
 
@@ -56,7 +70,7 @@ import hotpotato.ErrorTrans._
 ```scala mdoc
 val result: Either[E1 :+: E2 :+: E3 :+: CNil, String] = returnsE1()
 
-result.mapErrorInto(
+result.mapErrorAllInto(
   e1 => "e1",
   e2 => "e2",
   e3 => "e3"

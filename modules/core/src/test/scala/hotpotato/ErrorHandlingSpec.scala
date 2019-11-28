@@ -8,10 +8,10 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
   import ErrorTrans._
   implicit val embedder: Embedder[E1_E2_E3] = Embedder.make
 
-  "handleX should handle all coproduct cases into a single type" in {
+  "mapErrorAllInto should handle all coproduct cases into a single type" in {
     // Exhaustive error handling
     def exec(either: Either[E1_E2_E3, Unit]): Either[String, Unit] =
-      either.mapErrorInto(
+      either.mapErrorAllInto(
         (s: E1) => "e1",
         (s: E2) => "e2",
         (s: E3) => "e3",
@@ -23,13 +23,13 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
 
   }
 
-  "mapSomeError" should {
+  "mapErrorSome" should {
 
     "handle some cases (each into a different type), with the result type being the unique combination of all types + the unhandled cases" in {
       type ResultError = String :+: Int :+: E1 :+: CNil
 
       def exec(either: Either[E1_E2_E3, Unit]): Either[ResultError, Unit] =
-        either.mapSomeError(
+        either.mapErrorSome(
           (e: E3) => "e3",
           (e: E2) => 0,
         )
@@ -43,7 +43,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
       type ResultError = String :+: Int :+: E1 :+: CNil
 
       def exec(either: Either[E1_E2_E3_E4, Unit]): Either[String :+: Int :+: E1 :+: CNil, Unit] =
-        either.mapSomeError(
+        either.mapErrorSome(
           (e: E3) => "e3",
           (e: E2) => "e2",
           (e: E4) => 0,
@@ -61,7 +61,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
     type ResultError = String :+: Int :+: Child3 :+: CNil
 
     def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-      err.mapSomeAdtError(
+      err.mapErrorSomeAdt(
         (c: Child1) => "child1",
         (c: Child2) => 0,
       )
@@ -74,7 +74,7 @@ class ErrorHandlingSpec extends WordSpec with Matchers {
   "Handle ony some cases of a sealed trait into one type. Unhandled cases will appear in the final ADT" in {
     type ResultError = String :+: Child3 :+: CNil
     def exec(err: Either[Sealed, Unit]): Either[ResultError, Unit] =
-      err.mapSomeAdtError(
+      err.mapErrorSomeAdt(
         (c: Child1) => "child1",
         (c: Child2) => "child2",
       )
