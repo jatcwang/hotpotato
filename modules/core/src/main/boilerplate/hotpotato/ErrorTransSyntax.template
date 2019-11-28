@@ -6,6 +6,7 @@ import hotpotato.utils.DummyParam
 import shapeless.syntax.inject._
 import cats.implicits._
 
+//FIXME: extension method to assert error type (order independent)
 trait ErrorTransSyntax {
   [#
   implicit class ErrorTransCoproductOps1[F[_, _], [# L1 #], R](in: F[[#L1# :+: ] :+: CNil, R]) {
@@ -22,7 +23,6 @@ trait ErrorTransSyntax {
       }
     }
 
-    //FIXME: tests
     def mapErrorAll[[#L1Out#]](
       [#func1: L1 => L1Out#,
       ]
@@ -39,7 +39,6 @@ trait ErrorTransSyntax {
       }
     }
 
-    //FIXME: tests
     def flatMapErrorAllInto[OutL](
       [#func1: L1 => F[OutL, R]#,
       ]
@@ -53,7 +52,6 @@ trait ErrorTransSyntax {
       }
     }
 
-    //FIXME: tests
     def flatMapErrorAll[[#L1Out#]](
       [#func1: L1 => F[L1Out, R]#,
       ]
@@ -74,6 +72,9 @@ trait ErrorTransSyntax {
 
   implicit class ErrorTransCoproductOps[F[_, _], L <: Coproduct, R](in: F[L, R]) {
   [1..8#
+    //FIXME: Do we need to find a way to provide better error msg than "Cannot prove that Either[this.Out,String] =:= Either[ExpectedError,String]"
+    // FIXME: add overload to provide better errors when user accidentally handle all errors using mapErrorSome
+    //   same for flatMapErrorSome
     def mapErrorSome[[#L1, L1Out#], BasisRest <: Coproduct, UniqueOut <: Coproduct](
         [#func1: L1 => L1Out#,
         ]
@@ -100,7 +101,6 @@ trait ErrorTransSyntax {
     }
     # ]
 
-  // FIXME: tests
   [1..8#
     def flatMapErrorSome[[#L1, L1Out#], BasisRest <: Coproduct, UniqueOut <: Coproduct](
         [#func1: L1 => F[L1Out, R]#,
@@ -127,28 +127,6 @@ trait ErrorTransSyntax {
       }
     }# ]
 
-    [1..8#
-    def handleErrorSome[[#L1#], BasisRest <: Coproduct](
-      [#func1: L1 => F[Nothing, Unit]#,
-      ]
-    )(
-      implicit basis: Basis.Aux[L, [#L1# :+: ] :+: CNil, BasisRest],
-      errorTrans: ErrorTrans[F]
-    ): F[BasisRest, R] = {
-      errorTrans.flatMapError(in) { err =>
-        basis(err) match {
-          case Left(rest) => errorTrans.pureError[BasisRest, R](rest)
-          case Right(handledErrors) => handledErrors match {
-            [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e).asInstanceOf[F[BasisRest, R]]# ]
-            case [1..#Inr(# ]e[1..#)# ] => e.impossible
-          }
-        }
-      }
-    }
-    #
-    ]
-
-    //FIXME: handleAndRemoveSomeWith to do e.g. logging for certain errors and remove it
     /** Unify all coproduct error types into the common parent type ("least upper bound") */
     def unifyError[UnifiedL](
       implicit errorTrans: ErrorTrans[F],
@@ -169,7 +147,6 @@ trait ErrorTransSyntax {
         remove(errors)
       }
     }
-
     [2..8#
     def dieIf[[#L1#]](
       implicit errorTransThrow: ErrorTransThrow[F],

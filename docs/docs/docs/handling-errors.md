@@ -26,26 +26,21 @@ Below is a table of the type of handling and what methods you can use
   <tr>
     <td style="border: none"></td>
     <td colspan="2" class="bold">Converting Errors</td>
-    <td colspan="2" class="bold">Handling Errors</td>
   </tr>
   <tr>
     <td style="border: none"></td>
-    <td class="bold">Some</td>
-    <td class="bold">All</td>
     <td class="bold">Some</td>
     <td class="bold">All</td>
   </tr>
   <tr>
     <td class="left bold">Pure</td>
     <td>mapErrorSome</td>
-    <td>mapErrorAll</td>
+    <td>mapErrorAll / mapErrorAllInto</td>
   </tr>
   <tr>
     <td class="left bold">Effectful</td>
     <td>flatMapErrorSome</td>
-    <td>flatMapErrorAll</td>
-    <td>handleErrorSome</td>
-    <td>flatMapErrorAllInto</td>
+    <td>flatMapErrorAll / flatMapErrorAllInto</td>
   </tr>
 </table>
 
