@@ -68,6 +68,10 @@ object Examples {
   final case class Child1() extends Sealed
   final case class Child2() extends Sealed
   final case class Child3() extends Sealed
+
+  val child1: Child1 = Child1()
+  val child2: Child2 = Child2()
+  val child3: Child3 = Child3()
 }
 
 object PureExamples {

@@ -7,9 +7,10 @@ import shapeless._
 import shapeless.syntax.inject._
 import cats.implicits._
 import hotpotato.util.AssertType
+import org.scalatest.Inside
 import zio.Exit
 
-class ErrorTransformSpec extends AnyWordSpec with Matchers {
+class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
   import ErrorTrans._
   implicit val embedder: Embedder[E123] = Embedder.make
 
@@ -82,7 +83,7 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers {
           (_: Child2) => 0,
         )
 
-      exec(Left(Child1())) shouldBe Left(Coproduct[ResultError]("child1"))
+      exec(Left(child1)) shouldBe Left(Coproduct[ResultError]("child1"))
       exec(Left(Child2())) shouldBe Left(Coproduct[ResultError](0))
       exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
     }
@@ -96,7 +97,7 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers {
           (_: Child2) => "child2",
         )
 
-      exec(Left(Child1())) shouldBe Left(Coproduct[ResultError]("child1"))
+      exec(Left(child1)) shouldBe Left(Coproduct[ResultError]("child1"))
       exec(Left(Child2())) shouldBe Left(Coproduct[ResultError]("child2"))
       exec(Left(Child3())) shouldBe Left(Coproduct[ResultError](Child3()))
     }
@@ -322,6 +323,21 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers {
       (unsafeRun(b_E1234_3.dieIf[E1, E3]): Exit[E24, String]) shouldBe Exit.die(e3)
 
       (unsafeRun(b_E1234_4.dieIf[E1, E3]): Exit[E24, String]) shouldBe Exit.fail(e4.inject[E24])
+    }
+  }
+
+  "errorAsCoproduct" should {
+    import PureExamples._
+    "transform error sealed traits into coproducts" in {
+      type ExpectedError = Child1 :+: Child2 :+: Child3 :+: CNil
+      def exec(either: Either[Sealed, String]) =
+        AssertType {
+          either.errorAsCoproduct
+        }.is[Either[ExpectedError, String]]
+
+      exec(Left(child1)) shouldBe Left(child1.inject[ExpectedError])
+      exec(Left(child2)) shouldBe Left(child2.inject[ExpectedError])
+      exec(Left(child3)) shouldBe Left(child3.inject[ExpectedError])
     }
   }
 }
