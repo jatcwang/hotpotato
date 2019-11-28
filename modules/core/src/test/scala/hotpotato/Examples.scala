@@ -31,7 +31,7 @@ object Examples {
 
   final case class E8() extends AllErrors
 
-  type E123    = E1 :+: E2 :+: E3 :+: CNil
+  type E123        = E1 :+: E2 :+: E3 :+: CNil
   type E3_E4_E1    = E3 :+: E4 :+: E1 :+: CNil
   type E24         = E2 :+: E4 :+: CNil
   type E1_E2       = E1 :+: E2 :+: CNil
@@ -59,7 +59,7 @@ object Examples {
   type Err4[E1, E2, E3, E4] = E1 :+: E2 :+: E3 :+: E4 :+: CNil
 
   // Another layer of error which our layer 1 errors may need to unify into
-  // (e.g. hiding internal errors)
+  // (e.g. hiding internal errorsh)
   type F1_F2 = F1 :+: F2 :+: CNil
   case class F1(msg: String) extends Exception(msg)
   case class F2(msg: String) extends Exception(msg)
@@ -85,7 +85,7 @@ object PureExamples {
   def g_E34: Either[E3_E4, String]                              = Right("")
   def g_E4: Either[E4, String]                                  = Right("")
 
-  def b_E12_1: Either[E1_E2, String]     = Left(e1.inject)
+  def b_E12_1: Either[E1_E2, String] = Left(e1.inject)
   def b_E123_1: Either[E123, String] = Left(e1.inject[E123])
   def b_E123_2: Either[E123, String] = Left(e2.inject[E123])
   def b_E123_3: Either[E123, String] = Left(e3.inject[E123])

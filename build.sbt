@@ -21,7 +21,7 @@ lazy val core = moduleProject("core")
       // FIXME optional dep!
       "dev.zio" %% "zio" % "1.0.0-RC17",
       "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC9",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+      "org.scalatest" %% "scalatest" % "3.1.0-RC2" % "test",
     ),
   )
 
