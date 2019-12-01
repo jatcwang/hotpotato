@@ -1,0 +1,7 @@
+package hotpotato
+import shapeless._
+
+object types {
+  [1..9#type OneOf1[[#+A1#]] = [#A1 :+:# ]CNil#
+  ]
+}

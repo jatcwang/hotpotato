@@ -5,7 +5,7 @@ section: "home"
 position: 1
 ---
 
-A type-safe and flexible error handling library for Scala, based on Shapeless Coproducts.
+An error handling library based on Shapeless Coproducts, with a focus on type-safety, readability and ergonomic!
 
 [![Release](https://img.shields.io/nexus/r/com.github.jatcwang/hotpotato-core_2.13?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/releases/com/github/jatcwang/hotpotato-core_2.13/)
 [![Join the chat at https://gitter.im/jatcwang/hotpotato](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jatcwang/hotpotato)
@@ -16,41 +16,97 @@ A type-safe and flexible error handling library for Scala, based on Shapeless Co
 libraryDependencies += "com.github.jatcwang" %% "hotpotato-core" % LATEST_VERSION
 ```
 
-# Use it!
+# Quick Example
+
 ```scala mdoc:invisible
-case class SoldOut()
-case class DoesntExist()
-case class TooPoor(excuse: String)
-case class StruckByLightning() extends Throwable
-
-case class Item(id: Int, name: String)
-case class Box(item: Item)
-```
-```scala mdoc:silent
+import hotpotato._
 import zio._
-import hotpotato.implicits._
-import hotpotato.Embedder
-import shapeless._ // Coproduct type and functions to construct them
-import shapeless.syntax.inject._
+import zio.internal.{Platform, PlatformLive, Tracing}
 
-def findItem(): IO[SoldOut :+: DoesntExist :+: CNil, Item] = IO.succeed {
-  Item(id = 123, name = "Teddy Bear")
+val zioRuntime: DefaultRuntime = new DefaultRuntime {
+  override val platform
+  : Platform = PlatformLive.Default.withReportFailure(_ => ()).withTracing(Tracing.disabled)
 }
-def buyAndBoxItem(item: Item): IO[TooPoor :+: CNil, Box] = IO.fail(TooPoor("studied_hard").inject)
 
-def openBox(box: Box): IO[StruckByLightning :+: CNil, Item] = IO.succeed(box.item)
+case class ItemNotFound() extends Throwable
+case class ItemOutOfStock() extends Throwable
+case class NotAuthorized() extends Throwable
+case class InsufficientFunds() extends Throwable
+case class FraudDetected() extends Throwable
+
+case class PurchaseDenied(msg: String, cause: Throwable)
+
+case class Item(id: ItemId, name: String)
+case class BoughtItem(item: Item)
+
+type ItemId = String
+type UserId = String
 ```
+In the example below, we're trying to find an item and then buy it (providing a user ID).
+
+It demonstrates some of the features of this library, such as:
+
+* Handling errors partially (`mapErrorSome`)
+* Handling errors exhaustively (`mapErroAllInto`)
+* Dying on certain errors (i.e. terminating the whole execution chain) 
 
 ```scala mdoc
-implicit val embedder: Embedder[SoldOut :+: DoesntExist :+: TooPoor :+: CNil] = Embedder.make
-for {
-  item <- findItem()
-  box <- buyAndBoxItem(item).flatMapErrorAllInto(
-           tooPoor => if (tooPoor.excuse == "studied_hard")
-                        IO.succeed(Box(item)) // ask mum to buy it if we're too poor
-                      else IO.fail(tooPoor.inject[TooPoor :+: CNil])
-         ).embedError
-  openResult <- openBox(box).dieIf[StruckByLightning].embedError
-} yield openResult
+def findItem(id: String): IO[OneOf2[ItemNotFound, ItemOutOfStock], Item] = 
+  IO.fromEither {
+    if (id == "itm1") Right(Item(id = "itm1", name = "Teddy Bear"))
+    else Left(ItemNotFound().embedInto[OneOf2[ItemNotFound, ItemOutOfStock]])
+  }
+
+
+def buyItem(item: Item, userId: UserId): IO[OneOf3[FraudDetected, InsufficientFunds, NotAuthorized], BoughtItem] = {
+  implicit val embedder: Embedder[OneOf3[FraudDetected, InsufficientFunds, NotAuthorized]] =
+    Embedder.make
+  IO.fromEither {
+    if (userId == "frauduser") {
+      Left(FraudDetected().embed)
+    } else if (userId == "pooruser") {
+      Left(InsufficientFunds().embed)
+    } else {
+      Right(BoughtItem(item))
+    }
+  }
+}
+
+
+def findAndBuy(
+  itemId: ItemId,
+  userId: UserId,
+): IO[Nothing, String] = {
+  implicit val embedder: Embedder[OneOf3[ItemNotFound, ItemOutOfStock, PurchaseDenied]] =
+    Embedder.make
+  (for {
+    item <- findItem(itemId).embedError
+    boughtItem <- buyItem(item, userId)
+
+                   // Partial handling: converting some errors to another error
+                   .mapErrorSome(
+                     (e: InsufficientFunds) => PurchaseDenied("You don't have enough funds", e),
+                     (e: NotAuthorized) =>
+                       PurchaseDenied("You're not authorized to make purchases", e),
+                   )
+                   
+                   // Terminate the whole computation if we encounter something fatal
+                   .dieIf[FraudDetected]
+                   .embedError
+  } yield boughtItem)
+    .flatMap(boughtItem => IO.succeed(s"Bought ${boughtItem.item.name}!"))
+
+    // Exhaustive error handling, turning all errors into a user-friendly message
+    .flatMapErrorAllInto[Nothing](
+      (e: ItemNotFound)   => IO.succeed("item not found!"),
+      (e: ItemOutOfStock) => IO.succeed("item out of stock"),
+      (e: PurchaseDenied) => IO.succeed(s"Cannot purchase item because: ${e.msg}"),
+    )
+}
+
+zioRuntime.unsafeRunSync(findAndBuy(itemId = "invalid_itm_id", userId = "user1"))
+zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "pooruser"))
+zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "frauduser")).toEither
+zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "gooduser"))
 ```
 

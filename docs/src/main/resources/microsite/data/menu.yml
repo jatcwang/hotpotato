@@ -1,6 +1,8 @@
 options:
   - title: Quick Start
     url: docs/intro
+  - title: Why Hotpotato?
+    url: docs/why
   - title: Concepts
     url: docs/concepts
   - title: Handling Errors

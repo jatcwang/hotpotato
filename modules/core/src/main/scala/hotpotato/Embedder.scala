@@ -9,5 +9,5 @@ final class Embedder[Super <: Coproduct] {
 }
 
 object Embedder {
-  implicit def make[Super <: Coproduct] = new Embedder[Super]
+  def make[Super <: Coproduct] = new Embedder[Super]
 }

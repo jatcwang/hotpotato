@@ -7,7 +7,26 @@ permalink: docs/concepts
 # Concepts
 
 ## Union types using Shapeless Coproducts
-FIXME
+
+You can think Coproducts as `Either` type that is specialized for representing multiple possibilities (instead of just 2)
+
+For example, if we want to represent "Int or Double or Boolean", we can use the Either type
+
+`Either[Int, Either[Double, Boolean]]`, or in infix form `Int Either (Double Either Boolean)`
+
+You can use Coproducts to represent the same idea:
+
+`Int :+: Double :+: Boolean :+: CNil`
+
+where `CNil` is used to denote the end of a Coproduct. You can think of Coproducts as a list of types, and at runtime
+the actual value will be one of the types in the list. (Note that like nesting `Either`s, you can have duplicate types
+in your nesting `Either`, however when using `hotpotato` this isn't something you need to worry about)
+
+To make it easier to read and type, `hotpotato` provides the type `OneOf{1,2,3,4...}` which are type synonyms for
+the above Coproduct syntax. For example, you can use `OneOf3` to represent the exact same coproduct above:
+
+`OneOf3[Int, Double, Boolean]`
+
 ## Error handling strategies
 
 When faced with a few possible errors (i.e. a union of multiple errors),

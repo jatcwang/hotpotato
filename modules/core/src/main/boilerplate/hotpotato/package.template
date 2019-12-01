@@ -1,0 +1,6 @@
+import hotpotato.syntax.SyntaxAll
+
+package object hotpotato extends SyntaxAll{
+  [1..9#type OneOf1[[#+A1#]] = types.OneOf1[[#A1#]]#
+  ]
+}
