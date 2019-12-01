@@ -14,7 +14,7 @@ following calls.
 
 Note that the `Coproduct` instance of a `sealed trait` is alphabetically ordered!
 ```scala mdoc:invisible
-import hotpotato.ErrorTrans._
+import hotpotato.implicits._
 import shapeless._
 ```
 

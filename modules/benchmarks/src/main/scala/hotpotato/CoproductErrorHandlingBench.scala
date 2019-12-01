@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit}
 import zio._
-import ErrorTrans._
+import hotpotato.implicits._
 import hotpotato.Examples._
 import hotpotato.ZioExamples._
 import BenchmarkSetup.TracedRuntime

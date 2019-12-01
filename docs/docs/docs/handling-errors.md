@@ -59,7 +59,7 @@ def returnsE1() = b_E123_1
 
 ```scala mdoc:silent
 import shapeless._
-import hotpotato.ErrorTrans._
+import hotpotato.implicits._
 ```
 
 ```scala mdoc

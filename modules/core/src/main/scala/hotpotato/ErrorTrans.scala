@@ -23,7 +23,9 @@ trait ErrorTransThrow[F[_, _]] extends ErrorTrans[F] {
   ): F[LL, R]
 }
 
-object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
+object ErrorTrans extends ErrorTransInstances {}
+
+private[hotpotato] trait ErrorTransInstances extends ErrorTransLowerInstances {
 
   implicit val eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
@@ -48,35 +50,6 @@ object ErrorTrans extends ErrorTransSyntax with ErrorTransLowerInstances {
   //FIXME: zio optional dep
   implicit def zioErrorTrans[Env]: ErrorTransThrow[ZIO[Env, *, *]] =
     new ZioErrorTransThrow[Env]
-
-  implicit class ErrorTransCoprodEmbedOps[F[_, _], L <: Coproduct, R](
-    val in: F[L, R],
-  ) extends AnyVal {
-
-    /** Embed a coproduct into a larger (or equivalent) coproduct */
-    def embedError[Super <: Coproduct](
-      implicit F: ErrorTrans[F],
-      embedder: Embedder[Super],
-      basis: Basis[Super, L],
-    ): F[Super, R] =
-      F.bifunctor.leftMap(in) { err =>
-        embedder.embed[L](err)(basis)
-      }
-
-  }
-
-  implicit class ErrorTransIdLeftOps[F[_, _], L, R](val in: F[L, R]) extends AnyVal {
-
-    /** Embed a single non-coproduct type into the coproduct */
-    def embedError[Super <: Coproduct](
-      implicit F: ErrorTrans[F],
-      embedder: Embedder[Super], // Used for type inference only
-      inject: Inject[Super, L],
-    ): F[Super, R] =
-      F.bifunctor.leftMap(in) { err =>
-        inject(err)
-      }
-  }
 
 }
 

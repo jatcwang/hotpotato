@@ -1,6 +1,7 @@
 package hotpotato
 
 import hotpotato.Examples._
+import hotpotato.implicits._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import shapeless._
@@ -11,7 +12,6 @@ import org.scalatest.Inside
 import zio.Exit
 
 class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
-  import ErrorTrans._
   implicit val embedder: Embedder[E123] = Embedder.make
 
   "mapErrorAllInto should handle all coproduct cases into a single type" in {

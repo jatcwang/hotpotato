@@ -1,12 +1,13 @@
 package hotpotato
 
-import hotpotato.ErrorTrans._
+import hotpotato.implicits._
 import hotpotato.Examples._
 import hotpotato.PureExamples._
-import org.scalatest.{Matchers, WordSpec}
 import shapeless.syntax.inject._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ErrorEmbedSpec extends WordSpec with Matchers {
+class ErrorEmbedSpec extends AnyWordSpec with Matchers {
 
   "Error embedding" should {
     "Embed/combine errors in the success case" in {

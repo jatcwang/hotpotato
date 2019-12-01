@@ -5,8 +5,7 @@ import zio._
 import shapeless._
 
 import collection.mutable
-import hotpotato.syntax.embedder._
-import ErrorTrans._
+import hotpotato.implicits._
 
 object ServiceExample {
 
