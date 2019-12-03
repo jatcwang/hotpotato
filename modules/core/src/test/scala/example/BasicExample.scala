@@ -6,8 +6,8 @@ object BasicExample {
   import zio.internal.{Platform, PlatformLive, Tracing}
 
   val zioRuntime: DefaultRuntime = new DefaultRuntime {
-    override val platform
-    : Platform = PlatformLive.Default.withReportFailure(_ => ()).withTracing(Tracing.disabled)
+    override val platform: Platform =
+      PlatformLive.Default.withReportFailure(_ => ()).withTracing(Tracing.disabled)
   }
 
   case class ItemNotFound() extends Throwable
@@ -88,6 +88,6 @@ object BasicExample {
 
   zioRuntime.unsafeRunSync(findAndBuy(itemId = "invalid_itm_id", userId = "user1"))
   zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "pooruser"))
-  zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "frauduser")).toEither
-  zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId           = "gooduser"))
+  zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId = "frauduser")).toEither
+  zioRuntime.unsafeRunSync(findAndBuy(itemId = "itm1", userId = "gooduser"))
 }

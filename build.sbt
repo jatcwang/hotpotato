@@ -1,5 +1,5 @@
 //FIXME:
-ThisBuild / maxErrors := 1
+//ThisBuild / maxErrors := 1
 
 lazy val root = Project("hotpotato", file("."))
   .dependsOn(core, benchmarks, docs)
