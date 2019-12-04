@@ -14,7 +14,9 @@ Add the following to your build.sbt:
 libraryDependencies += "com.github.jatcwang" %% "hotpotato-core" % LATEST_VERSION
 ```
 
-Reload your project, and 
+If you're using Scala 2.12, make sure you add `scalacOptions += "-Ypartial-unitification"` compiler flag
+
+Reload your project, and start handling errors!
 
 ```scala mdoc:silent
 import hotpotato._
