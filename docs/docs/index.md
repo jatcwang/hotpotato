@@ -8,7 +8,7 @@ position: 1
 An error handling library based on Shapeless Coproducts, with a focus on type-safety, readability and ergonomic!
 
 [![Release](https://img.shields.io/nexus/r/com.github.jatcwang/hotpotato-core_2.13?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/releases/com/github/jatcwang/hotpotato-core_2.13/)
-[![Join the chat at https://gitter.im/jatcwang/hotpotato](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jatcwang/hotpotato)
+[![(https://badges.gitter.im/gitterHQ/gitter.png)](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jatcwang/hotpotato)
 
 # Installation
 
@@ -47,7 +47,7 @@ In the example below, we're trying to find an item and then buy it (providing a 
 It demonstrates some of the features of this library, such as:
 
 * Handling errors partially (`mapErrorSome`)
-* Handling errors exhaustively (`mapErroAllInto`)
+* Handling errors exhaustively (`mapErrorAllInto`)
 * Dying on certain errors (i.e. terminating the whole execution chain) 
 
 ```scala mdoc

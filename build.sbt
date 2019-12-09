@@ -1,6 +1,3 @@
-//FIXME:
-//ThisBuild / maxErrors := 1
-
 lazy val root = Project("hotpotato", file("."))
   .dependsOn(core, benchmarks, docs)
   .aggregate(core, benchmarks, docs)
@@ -45,6 +42,7 @@ lazy val docs = project
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "hotpotato",
     micrositeCompilingDocsTool := WithMdoc,
+    micrositeHighlightTheme := "a11y-light",
     micrositePushSiteWith := GitHub4s,
     micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
   )

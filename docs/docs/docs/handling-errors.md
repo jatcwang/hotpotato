@@ -60,10 +60,11 @@ def returnsE1() = b_E123_1
 ```scala mdoc:silent
 import shapeless._
 import hotpotato.implicits._
+import hotpotato._
 ```
 
 ```scala mdoc
-val result: Either[E1 :+: E2 :+: E3 :+: CNil, String] = returnsE1()
+val result: Either[OneOf3[E1, E2, E3], String] = returnsE1()
 
 result.mapErrorAllInto(
   e1 => "e1",
