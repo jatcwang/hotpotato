@@ -46,9 +46,7 @@ Below is a table of the type of handling and what methods you can use
 
 # Handling all errors
 
-## handling all errors into the same type
-
-Use `mapErrorInto`
+## mapErrorAllInto: handling all errors into the same type
 
 ```scala mdoc:invisible
 import hotpotato.PureExamples._
@@ -72,13 +70,4 @@ result.mapErrorAllInto(
   e3 => "e3"
 )
 ```
-
-There is `flatMapErrorInto`, if your error transformation returns :action GotoClass
-
-
-## Handling all errors but into different types
-
-Sometimes you want to transform each type of error into different types (e.g. 
-Converting error that makes sense in one layer into errors for another layer/abstraction)
-
 

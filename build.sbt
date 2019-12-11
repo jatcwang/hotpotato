@@ -15,7 +15,7 @@ lazy val core = moduleProject("core")
       "org.typelevel" %% "cats-effect" % "2.0.0",
       "org.typelevel" %% "cats-laws" % "2.0.0" % Test,
       "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1" % Test,
-      // FIXME optional dep!
+      // FIXME ZIO optional dep!
       "dev.zio" %% "zio" % "1.0.0-RC17",
       "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC10",
       "org.scalatest" %% "scalatest" % "3.1.0" % "test",
