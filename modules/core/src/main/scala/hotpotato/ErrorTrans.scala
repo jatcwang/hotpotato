@@ -47,7 +47,6 @@ private[hotpotato] trait ErrorTransInstances extends ErrorTransLowerInstances {
   ): ErrorTransThrow[EitherT[G, *, *]] =
     new EitherTErrorTransThrow[G]
 
-  //FIXME: zio optional dep
   implicit def zioErrorTrans[Env]: ErrorTransThrow[ZIO[Env, *, *]] =
     new ZioErrorTransThrow[Env]
 

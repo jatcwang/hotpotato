@@ -1,25 +1,44 @@
 lazy val root = Project("hotpotato", file("."))
   .dependsOn(core, benchmarks, docs)
-  .aggregate(core, benchmarks, docs)
+  .aggregate(core, benchmarks, docs, testoptionaldependency, testoptionaldependencymissing)
   .settings(
     publish / skip := true,
     commonSettings,
   )
 
+val zioDependency = "dev.zio" %% "zio" % "1.0.0-RC17"
 lazy val core = moduleProject("core")
   .enablePlugins(BoilerplatePlugin)
   .settings(
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       "org.typelevel" %% "cats-core" % "2.0.0",
-      "org.typelevel" %% "cats-effect" % "2.0.0",
+      "org.typelevel" %% "cats-effect" % "2.0.0" % "optional",
       "org.typelevel" %% "cats-laws" % "2.0.0" % Test,
       "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1" % Test,
-      // FIXME ZIO optional dep!
-      "dev.zio" %% "zio" % "1.0.0-RC17",
-      "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC10",
-      "org.scalatest" %% "scalatest" % "3.1.0" % "test",
+      zioDependency % "optional",
+      "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC10" % "optional",
     ),
+  )
+
+lazy val testoptionaldependencymissing = moduleProject("testoptionaldependencymissing")
+  .dependsOn(core)
+  .settings(
+    commonSettings,
+    publish / skip := true,
+  )
+
+lazy val testoptionaldependency = moduleProject("testoptionaldependency")
+  .dependsOn(core)
+  .settings(
+    commonSettings,
+    publish / skip := true,
+    libraryDependencies ++= Seq(
+      zioDependency,
+      "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC10",
+      "org.typelevel" %% "cats-core" % "2.0.0",
+      "org.typelevel" %% "cats-effect" % "2.0.0",
+    )
   )
 
 lazy val docs = project
@@ -51,6 +70,9 @@ lazy val benchmarks = moduleProject("benchmarks")
   .enablePlugins(JmhPlugin)
   .dependsOn(core % "compile->compile;compile->test")
   .settings(
+    libraryDependencies ++= Seq(
+      zioDependency
+    ),
     publish / skip := true,
   )
 
@@ -59,6 +81,11 @@ def moduleProject(name: String) =
     .settings(
       commonSettings,
     )
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.1.0" % "test",
+    )
+  )
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
