@@ -16,7 +16,7 @@ private[hotpotato] trait ErrorTransEmbedSyntax {
       embedder: Embedder[Super],
       basis: Basis[Super, L],
     ): F[Super, R] =
-      F.bifunctor.leftMap(in) { err =>
+      F.mapError(in) { err =>
         embedder.embed[L](err)(basis)
       }
 
@@ -30,7 +30,7 @@ private[hotpotato] trait ErrorTransEmbedSyntax {
       embedder: Embedder[Super], // Used for type inference only
       inject: Inject[Super, L],
     ): F[Super, R] =
-      F.bifunctor.leftMap(in) { err =>
+      F.mapError(in) { err =>
         inject(err)
       }
   }

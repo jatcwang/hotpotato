@@ -14,12 +14,12 @@ class ErrorTransInstanceSpec extends AnyFunSuite with Discipline {
 
   checkAll(
     "Either.ErrorTransLaws",
-    ErrorTransTests[Either[*, *]].errorTrans[Int, Int, Int, String, String, String],
+    ErrorTransTests[Either[*, *]].errorTrans[Int, Int, Int, String],
   )
 
   checkAll(
     "EitherT.ErrorTransLaws",
-    ErrorTransTests[EitherT[Option, *, *]].errorTrans[Int, Int, Int, String, String, String],
+    ErrorTransTests[EitherT[Option, *, *]].errorTrans[Int, Int, Int, String],
   )
 
   // Cheat a little bit by only generating only one type of throwable
@@ -33,7 +33,7 @@ class ErrorTransInstanceSpec extends AnyFunSuite with Discipline {
   checkAll(
     "EitherT.ErrorTransThrowLaws",
     ErrorTransThrowTests[EitherT[Either[Throwable, *], *, *]]
-      .errorTransThrow[Int, Int, Int, String, String, String],
+      .errorTransThrow[Int, Int, Int, String],
   )
 }
 

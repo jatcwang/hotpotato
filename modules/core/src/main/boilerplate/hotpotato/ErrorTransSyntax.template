@@ -1,9 +1,10 @@
 package hotpotato
+
+import cats.syntax.either._
+import hotpotato.coproduct.Unique
 import shapeless._
 import shapeless.ops.coproduct._
-import hotpotato.coproduct.Unique
 import shapeless.syntax.inject._
-import cats.implicits._
 
 trait ErrorTransSyntax {
   [#
@@ -14,7 +15,7 @@ trait ErrorTransSyntax {
     )(
       implicit errorTrans: ErrorTrans[F]
     ): F[OutL, R] = {
-      errorTrans.bifunctor.leftMap(in) {
+      errorTrans.mapError(in) {
         [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => func1(e)#
         ]
         case [1..#Inr(# ]e[1..#)# ] => e.impossible
@@ -28,7 +29,7 @@ trait ErrorTransSyntax {
       implicit unique: Unique[[#L1Out :+:# ] CNil],
       errorTrans: ErrorTrans[F]
     ): F[unique.Out, R] = {
-      errorTrans.bifunctor.leftMap(in) { err =>
+      errorTrans.mapError(in) { err =>
         type LOut = [#L1Out :+: # ] CNil
         err match {
           [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => unique(func1(e).inject[LOut])# ]
@@ -60,7 +61,7 @@ trait ErrorTransSyntax {
       errorTrans.flatMapError(in) { err =>
         type LOut = [#L1Out :+: # ] CNil
         err match {
-          [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.bifunctor.bimap(func1(e))(eOut => unique(eOut.inject[LOut]), identity)# ]
+          [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.mapError(func1(e))(eOut => unique(eOut.inject[LOut]))# ]
           case [1..#Inr(# ]e[1..#)# ] => e.impossible
         }
       }
@@ -78,7 +79,7 @@ trait ErrorTransSyntax {
       unique: Unique.Aux[[#L1Out# :+: ] :+: BasisRest, UniqueOut],
       errorTrans: ErrorTrans[F]
     ): F[UniqueOut, R] = {
-      errorTrans.bifunctor.leftMap(in) { err =>
+      errorTrans.mapError(in) { err =>
         unique.apply {
           basis(err) match {
             case Left(rest) => rest.extendLeftBy[[#L1Out# :+: ] :+: CNil]
@@ -111,7 +112,7 @@ trait ErrorTransSyntax {
           case Right(extracted) => {
             type LOut = [#L1Out# :+: ] :+: BasisRest
             extracted match {
-              [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.bifunctor.leftMap(func1(e))(
+              [1..#case [2..#Inr(# ]Inl(e)[2..#)# ] => errorTrans.mapError(func1(e))(
                 lxOut => unique.apply(Coproduct[LOut](lxOut)),
               )#
               ]
@@ -127,7 +128,7 @@ trait ErrorTransSyntax {
       implicit errorTrans: ErrorTrans[F],
       unifier: Unifier.Aux[L, UnifiedL]
     ): F[UnifiedL, R] = {
-      errorTrans.bifunctor.leftMap(in) { err =>
+      errorTrans.mapError(in) { err =>
         unifier(err)
       }
     }
@@ -166,7 +167,7 @@ trait ErrorTransSyntax {
     def errorAsCoproduct[LCopRepr <: Coproduct](
       implicit errorTrans: ErrorTrans[F],
         gen: Generic.Aux[L, LCopRepr]
-    ): F[LCopRepr, R] = errorTrans.bifunctor.leftMap(in)(l => gen.to(l))
+    ): F[LCopRepr, R] = errorTrans.mapError(in)(l => gen.to(l))
 
     @inline def errorIs[LL](
       implicit ev: L =:= LL

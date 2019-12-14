@@ -1,47 +1,55 @@
 package hotpotato.laws
-import cats.{Bifunctor, Eq}
-import cats.laws.{BifunctorLaws, IsEq}
-import cats.laws.discipline.{BifunctorTests, FunctorTests}
+
+import cats.Eq
+import cats.laws.IsEq
+import cats.laws._
+import cats.laws.discipline._
 import hotpotato.ErrorTrans
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop._
-import cats.laws._
-import cats.laws.discipline._
+import org.typelevel.discipline.Laws
 
-trait ErrorTransLaws[F[_, _]] extends BifunctorLaws[F] {
-  implicit def F: ErrorTrans[F] with Bifunctor[F]
+trait ErrorTransLaws[F[_, _]] {
+  implicit def F: ErrorTrans[F]
 
-  def transformErrorFpureErrorEquiv[L, R](in: F[L, R]): IsEq[F[L, R]] =
-    F.flatMapError(in)(e => F.pureError(e)) <-> in
+  def errorTransMapErrorIdentity[L, R](fa: F[L, R]): IsEq[F[L, R]] =
+    F.mapError(fa)(identity) <-> fa
+
+  def errorTransMapErrorComposition[L, R, L2, L3](
+    fa: F[L, R],
+    f: L  => L2,
+    g: L2 => L3,
+  ): IsEq[F[L3, R]] =
+    F.mapError(F.mapError(fa)(f))(g) <-> F.mapError(fa)(f.andThen(g))
+
+  def mapErrorFlatMapCoherence[L, R, LL](fa: F[L, R], f: L => LL): IsEq[F[LL, R]] =
+    F.flatMapError(fa)(a => F.pureError(f(a))) <-> F.mapError(fa)(f)
 
 }
 
-trait ErrorTransTests[F[_, _]] extends BifunctorTests[F] {
+trait ErrorTransTests[F[_, _]] extends Laws {
   def laws: ErrorTransLaws[F]
 
   def errorTrans[
-    A: Arbitrary: Eq,
-    A2: Arbitrary: Eq,
-    A3: Arbitrary: Eq,
-    B: Arbitrary: Eq,
-    B2: Arbitrary: Eq,
-    B3: Arbitrary: Eq,
+    L: Arbitrary: Eq,
+    L2: Arbitrary: Eq,
+    L3: Arbitrary: Eq,
+    R: Arbitrary: Eq,
   ](
     implicit
-    ArbFAB: Arbitrary[F[A, B]],
-    ArbA2: Arbitrary[A  => A2],
-    ArbA3: Arbitrary[A2 => A3],
-    ArbB2: Arbitrary[B  => B2],
-    ArbB3: Arbitrary[B2 => B3],
-    EqFAB: Eq[F[A, B]],
-    EqFCZ: Eq[F[A3, B3]],
-    EqFA3B: Eq[F[A3, B]],
-    EqFAB3: Eq[F[A, B3]],
+    ArbFLB: Arbitrary[F[L, R]],
+    ArbL2: Arbitrary[L  => L2],
+    ArbL3: Arbitrary[L2 => L3],
+    EqFLB: Eq[F[L, R]],
+    EqFL2B: Eq[F[L2, R]],
+    EqFL3B: Eq[F[L3, R]],
   ) =
     new DefaultRuleSet(
       name   = "ErrorTrans",
-      parent = Some(bifunctor[A, A2, A3, B, B2, B3]),
-      "transformErrorF pureError" -> forAll(laws.transformErrorFpureErrorEquiv[A, B] _),
+      parent = None,
+      "mapError Identity" -> forAll(laws.errorTransMapErrorIdentity[L, R] _),
+      "mapError associativity" -> forAll(laws.errorTransMapErrorComposition[L, R, L2, L3] _),
+      "mapError flatMapError coherence" -> forAll(laws.mapErrorFlatMapCoherence[L, R, L2] _),
     )
 }
 
@@ -49,18 +57,7 @@ object ErrorTransTests {
   def apply[F[_, _]](implicit FF: ErrorTrans[F]): ErrorTransTests[F] =
     new ErrorTransTests[F] {
       override def laws: ErrorTransLaws[F] = new ErrorTransLaws[F] {
-        override implicit def F: ErrorTrans[F] with Bifunctor[F] =
-          new ErrorTrans[F] with Bifunctor[F] {
-            override def bifunctor: Bifunctor[F] = FF.bifunctor
-
-            override def pureError[L, R](l: L): F[L, R] = FF.pureError(l)
-
-            override def flatMapError[L, R, LL](in: F[L, R])(func: L => F[LL, R]): F[LL, R] =
-              FF.flatMapError(in)(func)
-
-            override def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D] =
-              FF.bifunctor.bimap(fab)(f, g)
-          }
+        override implicit def F: ErrorTrans[F] = FF
       }
     }
 }

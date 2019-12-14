@@ -6,19 +6,17 @@ lazy val root = Project("hotpotato", file("."))
     commonSettings,
   )
 
-val zioDep             = "dev.zio" %% "zio" % "1.0.0-RC17"
-val zioCatsInteroptDep = "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC10"
-val catsEffectDep      = "org.typelevel" %% "cats-effect" % "2.0.0"
-val catsCoreDep        = "org.typelevel" %% "cats-core" % "2.0.0"
+val zioDep        = "dev.zio" %% "zio" % "1.0.0-RC17"
+val catsCoreDep   = "org.typelevel" %% "cats-core" % "2.0.0"
+val catsEffectDep = "org.typelevel" %% "cats-effect" % "2.0.0"
+
 lazy val core = moduleProject("core")
   .enablePlugins(BoilerplatePlugin)
   .settings(
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       catsCoreDep,
-      catsEffectDep % "optional",
-      zioDep % "optional",
-      zioCatsInteroptDep % "optional",
+      zioDep % Optional,
       "org.typelevel" %% "cats-laws" % "2.0.0" % Test,
       "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1" % Test,
     ),
@@ -38,7 +36,6 @@ lazy val testoptionaldependency = moduleProject("testoptionaldependency")
     publish / skip := true,
     libraryDependencies ++= Seq(
       zioDep,
-      zioCatsInteroptDep,
       catsCoreDep,
       catsEffectDep,
     ),
@@ -52,8 +49,6 @@ lazy val docs = project
     publish / skip := true,
     libraryDependencies ++= Seq(
       zioDep,
-      zioCatsInteroptDep,
-      catsEffectDep,
     ),
   )
   .settings(
