@@ -175,10 +175,6 @@ trait ErrorTransSyntax {
 
 }
 
-//FIXME: embed a Nothing on the left
 //TODO: allow mapErrorSome to return a list of errors
 //TODO: dieIf for L1 :+: CNil should result in Nothing
-//FIXME: turn a success result into a failure
-//FIXME: Do we need to find a way to provide better error msg than "Cannot prove that Either[this.Out,String] =:= Either[ExpectedError,String]"
-// FIXME: add overload to provide better errors when user accidentally handle all errors using mapErrorSome
-//   same for flatMapErrorSome
+//TODO: turn a success result into a failure

@@ -33,3 +33,15 @@ either.errorAsCoproduct.errorIs[A :+: B :+: C :+: CNil]
 either.errorAsCoproduct[A :+: B :+: C :+: CNil]
 ```
 
+## How does the ZIO / Cats Effect integration work? Why do I not need an extra `hotpotato-zio` dependency and an import?
+
+To improve user ergonomics, this project puts all typeclass instances inside the companion object.
+Do not worry! With optional dependencies like `zio` and `cats-effect` marked as `optional`, your project will not
+incur a dependency on them if you don't already have it in your classpath!
+
+To read more about this technique, see 
+
+## Known issues / Caveats?
+
+* Compile time - due to the heavy use of shapeless (implicits), compile time of your project may suffer.
+  It's recommended that you use hotpotato where it matters, and use sealed traits when it is sufficient.
