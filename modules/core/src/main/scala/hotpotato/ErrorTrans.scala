@@ -1,11 +1,9 @@
 package hotpotato
 
 import cats.{Bifunctor, Monad, MonadError}
-import cats.data._
-import cats.implicits._
-import shapeless._
-import shapeless.ops.coproduct.{Basis, Inject}
-import zio._
+import cats.data.EitherT
+import cats.syntax.either._
+import zio.ZIO
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
 trait ErrorTrans[F[_, _]] {
@@ -23,9 +21,11 @@ trait ErrorTransThrow[F[_, _]] extends ErrorTrans[F] {
   ): F[LL, R]
 }
 
-object ErrorTrans extends ErrorTransInstances {}
+object ErrorTrans extends ErrorTransInstances {
+  def apply[F[_, _]: ErrorTrans]: ErrorTrans[F] = implicitly
+}
 
-private[hotpotato] trait ErrorTransInstances extends ErrorTransLowerInstances {
+private[hotpotato] trait ErrorTransInstances {
 
   implicit val eitherErrorTrans: ErrorTrans[Either] =
     new ErrorTrans[Either] {
@@ -42,21 +42,26 @@ private[hotpotato] trait ErrorTransInstances extends ErrorTransLowerInstances {
       override def pureError[L, R](l: L): Either[L, R] = Left(l)
     }
 
+  implicit def eitherTErrorTrans[M[_]: Monad]: ErrorTrans[EitherT[M, *, *]] =
+    new EitherTErrorTransInstance[M]
+
+  implicit def zioErrorTrans[Env]: ErrorTrans[ZIO[Env, *, *]] =
+    new ZioErrorTransThrow[Env]
+}
+
+object ErrorTransThrow extends ErrorTransThrowInstances {
+  def apply[F[_, _]: ErrorTransThrow]: ErrorTransThrow[F] = implicitly
+}
+
+private[hotpotato] trait ErrorTransThrowInstances {
+
   implicit def eitherTErrorTransThrow[G[_]](
     implicit G: MonadError[G, Throwable],
   ): ErrorTransThrow[EitherT[G, *, *]] =
     new EitherTErrorTransThrow[G]
 
-  implicit def zioErrorTrans[Env]: ErrorTransThrow[ZIO[Env, *, *]] =
+  implicit def zioErrorTransThrow[Env]: ErrorTransThrow[ZIO[Env, *, *]] =
     new ZioErrorTransThrow[Env]
-
-}
-
-private[hotpotato] trait ErrorTransLowerInstances {
-
-  implicit def eitherTErrorTrans[M[_]](implicit M: Monad[M]): ErrorTrans[EitherT[M, *, *]] =
-    new EitherTErrorTransInstance[M]
-
 }
 
 private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
