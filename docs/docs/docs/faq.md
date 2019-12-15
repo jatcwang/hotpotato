@@ -39,7 +39,7 @@ To improve user ergonomics, this project puts all typeclass instances inside the
 Do not worry! With optional dependencies like `zio` and `cats-effect` marked as `optional`, your project will not
 incur a dependency on them if you don't already have it in your classpath!
 
-To read more about this technique, see 
+To read more about this technique, see ["No More Orphans" from 7minds.io]([https://blog.7mind.io/no-more-orphans.html])
 
 ## Known issues / Caveats?
 
