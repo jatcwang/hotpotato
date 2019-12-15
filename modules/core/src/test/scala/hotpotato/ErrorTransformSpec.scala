@@ -274,7 +274,13 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
   }
 
   "dieIf" should {
-    "dieIf throws the case as the exception (one type param)" in {
+    "dieIf1 throws the provided case, and ends with Nothing as the error" in {
+      import ZioExamples._
+      (unsafeRun(zio.IO.fail(E1().inject[E1 :+: CNil]).dieIf1[E1]): Exit[Nothing, String]) shouldBe
+        Exit.die(e1)
+    }
+
+    "throws the case as the exception (one type param)" in {
       import ZioExamples._
 
       (unsafeRun(b_E1234_1.dieIf[E1]): Exit[E234, String]) shouldBe Exit.die(e1)

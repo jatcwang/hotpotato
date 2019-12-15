@@ -132,9 +132,22 @@ trait ErrorTransSyntax {
       }
     }
 
+    /** Singleton die case where error will be Nothing since all errors are eliminated */
+    def dieIf1[L1 <: Throwable](
+      implicit errorTransThrow: ErrorTransThrow[F],
+      ev: L =:= (L1 :+: CNil)
+    ): F[Nothing, R] = {
+      errorTransThrow.extractAndThrow(in) { errors =>
+        ev(errors) match {
+          case Inl(e1) => Left(e1)
+          case Inr(cnil) => cnil.impossible
+        }
+      }
+    }
+
     def dieIf[L1 <: Throwable](
       implicit errorTransThrow: ErrorTransThrow[F],
-      remove: Remove[L, L1]
+      remove: Remove[L, L1],
     ): F[remove.Rest, R] = {
     // Special implementation of throw1 because shapeless Unifier doesn't support upcasting
     // coproduct with single element
@@ -175,6 +188,3 @@ trait ErrorTransSyntax {
 
 }
 
-//TODO: allow mapErrorSome to return a list of errors
-//TODO: dieIf for L1 :+: CNil should result in Nothing
-//TODO: turn a success result into a failure
