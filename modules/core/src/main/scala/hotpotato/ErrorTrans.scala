@@ -2,8 +2,9 @@ package hotpotato
 
 import cats.{Bifunctor, Monad, MonadError}
 import cats.data.EitherT
-import cats.syntax.either._
-import zio.ZIO
+import shapeless._
+import shapeless.ops.coproduct.{Basis, Inject}
+import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
 trait ErrorTrans[F[_, _]] {
@@ -36,7 +37,7 @@ private[hotpotato] trait ErrorTransInstances {
       ): Either[LL, R] =
         in match {
           case Left(l)      => func(l)
-          case r @ Right(_) => r.leftCast[LL]
+          case r @ Right(_) => (r: Right[L, R]).asInstanceOf[Either[LL, R]]
         }
 
       override def pureError[L, R](l: L): Either[L, R] = Left(l)
@@ -76,7 +77,7 @@ private[hotpotato] class EitherTErrorTransInstance[M[_]](implicit M: Monad[M])
   )(func: L => EitherT[M, LL, R]): EitherT[M, LL, R] =
     EitherT(M.flatMap(in.value) {
       case Left(l)      => func(l).value
-      case r @ Right(_) => M.pure(r.leftCast[LL])
+      case r @ Right(_) => M.pure((r: Right[L, R]).asInstanceOf[Either[LL, R]])
     })
 
 }
