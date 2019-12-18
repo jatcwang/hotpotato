@@ -1,7 +1,6 @@
 package hotpotato
 
 import hotpotato.Examples._
-import hotpotato.implicits._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import shapeless._
@@ -125,7 +124,7 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
 
     "mapping a single error" in {
       (Left(e1.inject): Either[E1 :+: CNil, String]).mapErrorAll(
-        e1 => "e1",
+        (_: E1) => "e1",
       ) shouldBe Left("e1".inject[String :+: CNil])
     }
 
@@ -303,7 +302,6 @@ class ErrorTransformSpec extends AnyWordSpec with Matchers with Inside {
   }
 
   "errorAsCoproduct" should {
-    import PureExamples._
     "transform error sealed traits into coproducts" in {
       type ExpectedError = Child1 :+: Child2 :+: Child3 :+: CNil
       def exec(either: Either[Sealed, String]) =

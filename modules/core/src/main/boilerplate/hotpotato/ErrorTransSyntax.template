@@ -183,7 +183,10 @@ trait ErrorTransSyntax {
 
     @inline def errorIs[LL](
       implicit ev: L =:= LL
-    ): F[LL, R] = in.asInstanceOf[F[LL, R]]
+    ): F[LL, R] = {
+      val _ = ev // unused
+      in.asInstanceOf[F[LL, R]]
+    }
   }
 
 }

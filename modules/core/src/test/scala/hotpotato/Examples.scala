@@ -53,11 +53,6 @@ object Examples {
   val e7: E7 = E7()
   val e8: E8 = E8()
 
-  type Err1[E1]             = E1 :+: CNil
-  type Err2[E1, E2]         = E1 :+: E2 :+: CNil
-  type Err3[E1, E2, E3]     = E1 :+: E2 :+: E3 :+: CNil
-  type Err4[E1, E2, E3, E4] = E1 :+: E2 :+: E3 :+: E4 :+: CNil
-
   // Another layer of error which our layer 1 errors may need to unify into
   // (e.g. hiding internal errorsh)
   type F1_F2 = F1 :+: F2 :+: CNil
@@ -106,10 +101,10 @@ object ZioExamples {
 
   def unsafeRun[E, A](z: IO[E, A]): Exit[E, A] = zioRuntime.unsafeRunSync(z)
 
-  def g_E1: IO[E1, String]                            = IO.succeed("")
-  def g_E1_E2: IO[Err2[E1, E2], String]               = IO.succeed("")
-  def g_E1_E2_E3: IO[Err3[E1, E2, E3], String]        = IO.succeed("")
-  def g_E1_E2_E3_E4: IO[Err4[E1, E2, E3, E4], String] = IO.succeed("")
+  def g_E1: IO[E1, String]                              = IO.succeed("")
+  def g_E1_E2: IO[OneOf2[E1, E2], String]               = IO.succeed("")
+  def g_E1_E2_E3: IO[OneOf3[E1, E2, E3], String]        = IO.succeed("")
+  def g_E1_E2_E3_E4: IO[OneOf4[E1, E2, E3, E4], String] = IO.succeed("")
 
   val b_allError_1: IO[AllErrors, String] = IO.fail(e1)
   val b_allError_4: IO[AllErrors, String] = IO.fail(e4)

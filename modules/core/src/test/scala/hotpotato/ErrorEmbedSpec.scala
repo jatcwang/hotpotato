@@ -1,6 +1,5 @@
 package hotpotato
 
-import hotpotato.implicits._
 import hotpotato.Examples._
 import hotpotato.PureExamples._
 import shapeless.syntax.inject._

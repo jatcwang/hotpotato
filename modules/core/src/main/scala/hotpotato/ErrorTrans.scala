@@ -2,8 +2,6 @@ package hotpotato
 
 import cats.{Bifunctor, Monad, MonadError}
 import cats.data.EitherT
-import shapeless._
-import shapeless.ops.coproduct.{Basis, Inject}
 import zio._
 
 /** Typeclass for any F type constructor with two types where the error (left side) can be transformed */
