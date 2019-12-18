@@ -6,7 +6,7 @@ import org.scalatest.wordspec.AnyWordSpec
 class OptionalDependencyMissingTest extends AnyWordSpec {
   "ErrorTrans instance" should {
     "for Either" in {
-      implicitly[ErrorTrans[Either]]
+      val _ = implicitly[ErrorTrans[Either]]
     }
   }
 }

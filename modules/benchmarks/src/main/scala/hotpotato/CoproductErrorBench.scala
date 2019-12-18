@@ -4,8 +4,6 @@ package hotpotato
 import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit}
-import zio._
-import hotpotato.implicits._
 import hotpotato.Examples._
 import hotpotato.ZioExamples._
 import BenchmarkSetup.TracedRuntime
@@ -15,7 +13,7 @@ import BenchmarkSetup.TracedRuntime
 class CoproductErrorBench {
 
   @Benchmark
-  def copDeepBigErrorTail: Unit = {
+  def copDeepBigErrorTail(): Unit = {
     implicit val embedder: Embedder[E1to8] = new Embedder[E1to8]
     val io = for {
       _ <- g_E1_E2.embedError
@@ -44,11 +42,11 @@ class CoproductErrorBench {
       _ <- g_E1_E2.embedError
       _ <- b_E1to8_8.embedError
     } yield ()
-    TracedRuntime.unsafeRun(io.either)
+    val _ = TracedRuntime.unsafeRun(io.either)
   }
 
   @Benchmark
-  def copDeepBigErrorHead: Unit = {
+  def copDeepBigErrorHead(): Unit = {
     implicit val embedder: Embedder[E1_E2_E3_E4] = new Embedder[E1_E2_E3_E4]
     val io = for {
       _ <- g_E1_E2.embedError
@@ -77,11 +75,11 @@ class CoproductErrorBench {
       _ <- g_E1_E2.embedError
       _ <- b_E1234_1.embedError
     } yield ()
-    TracedRuntime.unsafeRun(io.either)
+    val _ = TracedRuntime.unsafeRun(io.either)
   }
 
   @Benchmark
-  def norDeepError: Unit = {
+  def norDeepError(): Unit = {
     val io = for {
       _ <- g_E1
       _ <- g_E1
@@ -109,8 +107,7 @@ class CoproductErrorBench {
       _ <- g_E1
       _ <- b_E4
     } yield ()
-    TracedRuntime.unsafeRun(io.either)
-
+    val _ = TracedRuntime.unsafeRun(io.either)
   }
 
 }

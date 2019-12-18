@@ -5,11 +5,10 @@ import zio._
 import shapeless._
 
 import collection.mutable
-import hotpotato.implicits._
 
 object ServiceExample {
 
-  final case class NotFound[Id](id: Id)
+  final case class NotFound[IdType](id: IdType)
   final case class NotAuthorized()
   final case class InvalidCreationData(message: String)
 

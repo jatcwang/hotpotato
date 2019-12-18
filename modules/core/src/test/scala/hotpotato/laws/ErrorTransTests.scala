@@ -1,7 +1,7 @@
 package hotpotato.laws
 import cats.{Bifunctor, Eq}
 import cats.laws.{BifunctorLaws, IsEq}
-import cats.laws.discipline.{BifunctorTests, FunctorTests}
+import cats.laws.discipline.BifunctorTests
 import hotpotato.ErrorTrans
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop._

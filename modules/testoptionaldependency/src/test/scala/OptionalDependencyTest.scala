@@ -8,21 +8,21 @@ import zio.{IO         => ZIOIO}
 class OptionalDependencyTest extends AnyWordSpec {
   "Cats EitherT" should {
     "have ErrorTrans instance" in {
-      implicitly[ErrorTrans[EitherT[Option, *, *]]]
+      val _ = implicitly[ErrorTrans[EitherT[Option, *, *]]]
     }
 
     "have ErrorTransThrow instance" in {
-      implicitly[ErrorTransThrow[EitherT[CatsIO, *, *]]]
+      val _ = implicitly[ErrorTransThrow[EitherT[CatsIO, *, *]]]
     }
   }
 
   "ZIO IO" should {
     "have ErrorTrans instance" in {
-      implicitly[ErrorTrans[ZIOIO]]
+      val _ = implicitly[ErrorTrans[ZIOIO]]
     }
 
     "have ErrorTransThrow instance" in {
-      implicitly[ErrorTransThrow[ZIOIO]]
+      val _ = implicitly[ErrorTransThrow[ZIOIO]]
     }
   }
 

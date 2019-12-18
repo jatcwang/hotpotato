@@ -15,10 +15,12 @@ private[hotpotato] trait ErrorTransEmbedSyntax {
       implicit F: ErrorTrans[F],
       embedder: Embedder[Super],
       basis: Basis[Super, L],
-    ): F[Super, R] =
+    ): F[Super, R] = {
+      val _ = embedder // Used for type inference only
       F.bifunctor.leftMap(in) { err =>
         embedder.embed[L](err)(basis)
       }
+    }
 
   }
 
@@ -27,12 +29,14 @@ private[hotpotato] trait ErrorTransEmbedSyntax {
     /** Embed a single non-coproduct type into the coproduct */
     def embedError[Super <: Coproduct](
       implicit F: ErrorTrans[F],
-      embedder: Embedder[Super], // Used for type inference only
+      embedder: Embedder[Super],
       inject: Inject[Super, L],
-    ): F[Super, R] =
+    ): F[Super, R] = {
+      val _ = embedder // Used for type inference only
       F.bifunctor.leftMap(in) { err =>
         inject(err)
       }
+    }
   }
 
 }

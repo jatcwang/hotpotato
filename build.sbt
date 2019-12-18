@@ -98,10 +98,15 @@ def moduleProject(name: String) =
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
   crossScalaVersions := List("2.12.10", "2.13.1"),
-  scalacOptions ++= Seq(
-    "-language:higherKinds",
-  ),
-  //    addCompilerPlugin("io.tryp" % "splain" % "0.4.1" cross CrossVersion.patch),
+  scalacOptions --= {
+    Seq("-Wself-implicit") ++ (
+      if (sys.env.get("CI").isDefined) {
+        Seq.empty
+      } else {
+        Seq("-Xfatal-warnings")
+      }
+    )
+  },
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
 )

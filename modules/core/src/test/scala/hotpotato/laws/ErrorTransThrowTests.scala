@@ -1,12 +1,10 @@
 package hotpotato.laws
+import cats.laws.{IsEq, _}
+import cats.laws.discipline._
 import cats.{Bifunctor, Eq}
-import cats.laws.{BifunctorLaws, IsEq}
-import cats.laws.discipline.{BifunctorTests, FunctorTests}
-import hotpotato.{ErrorTrans, ErrorTransThrow}
+import hotpotato.ErrorTransThrow
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop._
-import cats.laws._
-import cats.laws.discipline._
 
 trait ErrorTransThrowLaws[F[_, _]] extends ErrorTransLaws[F] {
   implicit def F: ErrorTransThrow[F] with Bifunctor[F]

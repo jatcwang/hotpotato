@@ -80,8 +80,8 @@ object BasicExample {
       .flatMap(boughtItem => IO.succeed(s"Bought ${boughtItem.item.name}!"))
       // Exhaustive error handling, in this case we turn it into a user-friendly message
       .flatMapErrorAllInto[Nothing](
-        (e: ItemNotFound)   => IO.succeed("item not found!"),
-        (e: ItemOutOfStock) => IO.succeed("item out of stock"),
+        (_: ItemNotFound)   => IO.succeed("item not found!"),
+        (_: ItemOutOfStock) => IO.succeed("item out of stock"),
         (e: PurchaseDenied) => IO.succeed(s"Cannot purchase item because: ${e.msg}"),
       )
   }
