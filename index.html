@@ -52,45 +52,45 @@
     <span class="n">item</span> <span class="k">&lt;-</span> <span class="nf">findItem</span><span class="o">(</span><span class="n">itemId</span><span class="o">).</span><span class="py">embedError</span>
     <span class="n">boughtItem</span> <span class="k">&lt;-</span> <span class="nf">buyItem</span><span class="o">(</span><span class="n">item</span><span class="o">,</span> <span class="n">userId</span><span class="o">)</span>
 
-                   <span class="c1">// Partial handling: converting some errors to another error
-</span>                   <span class="o">.</span><span class="py">mapErrorSome</span><span class="o">(</span>
+                   <span class="c1">// Partial handling: converting some errors to another error</span>
+                   <span class="o">.</span><span class="py">mapErrorSome</span><span class="o">(</span>
                      <span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">InsufficientFunds</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">PurchaseDenied</span><span class="o">(</span><span class="s">"You don't have enough funds"</span><span class="o">,</span> <span class="n">e</span><span class="o">),</span>
                      <span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">NotAuthorized</span><span class="o">)</span> <span class="k">=&gt;</span>
                        <span class="nc">PurchaseDenied</span><span class="o">(</span><span class="s">"You're not authorized to make purchases"</span><span class="o">,</span> <span class="n">e</span><span class="o">),</span>
                    <span class="o">)</span>
                    
-                   <span class="c1">// Terminate the whole computation if we encounter something fatal
-</span>                   <span class="o">.</span><span class="py">dieIf</span><span class="o">[</span><span class="kt">FraudDetected</span><span class="o">]</span>
+                   <span class="c1">// Terminate the whole computation if we encounter something fatal</span>
+                   <span class="o">.</span><span class="py">dieIf</span><span class="o">[</span><span class="kt">FraudDetected</span><span class="o">]</span>
                    <span class="o">.</span><span class="py">embedError</span>
   <span class="o">}</span> <span class="k">yield</span> <span class="n">boughtItem</span><span class="o">)</span>
     <span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="n">boughtItem</span> <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="n">s</span><span class="s">"Bought ${boughtItem.item.name}!"</span><span class="o">))</span>
 
-    <span class="c1">// Exhaustive error handling, turning all errors into a user-friendly message
-</span>    <span class="o">.</span><span class="py">flatMapErrorAllInto</span><span class="o">[</span><span class="kt">Nothing</span><span class="o">](</span>
-      <span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">ItemNotFound</span><span class="o">)</span>   <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="s">"item not found!"</span><span class="o">),</span>
-      <span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">ItemOutOfStock</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="s">"item out of stock"</span><span class="o">),</span>
+    <span class="c1">// Exhaustive error handling, turning all errors into a user-friendly message</span>
+    <span class="o">.</span><span class="py">flatMapErrorAllInto</span><span class="o">[</span><span class="kt">Nothing</span><span class="o">](</span>
+      <span class="o">(</span><span class="k">_:</span> <span class="kt">ItemNotFound</span><span class="o">)</span>   <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="s">"item not found!"</span><span class="o">),</span>
+      <span class="o">(</span><span class="k">_:</span> <span class="kt">ItemOutOfStock</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="s">"item out of stock"</span><span class="o">),</span>
       <span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">PurchaseDenied</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nv">IO</span><span class="o">.</span><span class="py">succeed</span><span class="o">(</span><span class="n">s</span><span class="s">"Cannot purchase item because: ${e.msg}"</span><span class="o">),</span>
     <span class="o">)</span>
 <span class="o">}</span>
 
 <span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"invalid_itm_id"</span><span class="o">,</span> <span class="n">userId</span> <span class="k">=</span> <span class="s">"user1"</span><span class="o">))</span>
-<span class="c1">// res0: Exit[Nothing, String] = Success("item not found!")
-</span><span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"pooruser"</span><span class="o">))</span>
-<span class="c1">// res1: Exit[Nothing, String] = Success(
-//   "Cannot purchase item because: You don't have enough funds"
-// )
-</span><span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"frauduser"</span><span class="o">)).</span><span class="py">toEither</span>
-<span class="c1">// res2: Either[Throwable, String] = Left(
-//   FiberFailure(
-//     Traced(
-//       Die(repl.Session$App$FraudDetected),
-//       ZTrace(Id(1576102707383L, 2L), List(), List(), None)
-//     )
-//   )
-// )
-</span><span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"gooduser"</span><span class="o">))</span>
-<span class="c1">// res3: Exit[Nothing, String] = Success("Bought Teddy Bear!")
-</span></code></pre></div></div>
+<span class="c1">// res0: Exit[Nothing, String] = Success("item not found!")</span>
+<span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"pooruser"</span><span class="o">))</span>
+<span class="c1">// res1: Exit[Nothing, String] = Success(</span>
+<span class="c1">//   "Cannot purchase item because: You don't have enough funds"</span>
+<span class="c1">// )</span>
+<span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"frauduser"</span><span class="o">)).</span><span class="py">toEither</span>
+<span class="c1">// res2: Either[Throwable, String] = Left(</span>
+<span class="c1">//   FiberFailure(</span>
+<span class="c1">//     Traced(</span>
+<span class="c1">//       Die(repl.Session$App$FraudDetected),</span>
+<span class="c1">//       ZTrace(Id(1576789551482L, 2L), List(), List(), None)</span>
+<span class="c1">//     )</span>
+<span class="c1">//   )</span>
+<span class="c1">// )</span>
+<span class="nv">zioRuntime</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">(</span><span class="nf">findAndBuy</span><span class="o">(</span><span class="n">itemId</span> <span class="k">=</span> <span class="s">"itm1"</span><span class="o">,</span> <span class="n">userId</span>           <span class="k">=</span> <span class="s">"gooduser"</span><span class="o">))</span>
+<span class="c1">// res3: Exit[Nothing, String] = Success("Bought Teddy Bear!")</span>
+</code></pre></div></div>
 
 </div></div></section></main><footer id="site-footer"><div class="container"><div class="row"><p>Hotpotato is designed and developed by <a href="https://github.com/jatcwang/hotpotato" target="_blank" rel="noopener noreferrer">Jacob Wang</a></p></div><div class="row"><div><p>Website built with <a href="https://47deg.github.io/sbt-microsites/" target="_blank" rel="noopener noreferrer">sbt-microsites</a> - © 2019 <a href="https://www.47deg.com/" target="_blank" rel="noopener noreferrer">47 Degrees</a></p></div></div></div></footer><script src="/hotpotato/highlight/highlight.pack.js"></script><script>hljs.configure({languages:['scala','java','bash']});
 hljs.initHighlightingOnLoad();
