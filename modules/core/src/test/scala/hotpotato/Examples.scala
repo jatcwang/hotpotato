@@ -31,6 +31,9 @@ object Examples {
 
   final case class E8() extends AllErrors
 
+  final case class X1(e: AllErrors)
+  final case class X2(e: AllErrors)
+
   type E123        = E1 :+: E2 :+: E3 :+: CNil
   type E3_E4_E1    = E3 :+: E4 :+: E1 :+: CNil
   type E24         = E2 :+: E4 :+: CNil

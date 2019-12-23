@@ -46,7 +46,10 @@ Below is a table of the type of handling and what methods you can use
 
 # Handling all errors
 
-## mapErrorAllInto: handling all errors into the same type
+Required import:
+```scala mdoc:silent
+import hotpotato._
+```
 
 ```scala mdoc:invisible
 import hotpotato.PureExamples._
@@ -55,15 +58,27 @@ import hotpotato.Examples._
 def returnsE1() = b_E123_1
 ```
 
-```scala mdoc:silent
-import shapeless._
-import hotpotato.implicits._
-import hotpotato._
-```
-
+Example value we will be operating on:
 ```scala mdoc
 val result: Either[OneOf3[E1, E2, E3], String] = returnsE1()
+```
 
+## mapErrorAll: transforming all errors into different types
+```scala mdoc
+val x: Either[OneOf2[X2, X1], String] = result.mapErrorAll(
+  (e1: E1) => X1(e1),
+  (e2: E2) => X2(e2),
+  (e3: E3) => X1(e3)
+)
+```
+
+Note that duplicate types are deduplicated automatically.
+
+## mapErrorAllInto: transforming all errors into the same type
+
+For example, you might want to convert all errors into an error message for the user.
+
+```scala mdoc
 result.mapErrorAllInto(
   e1 => s"Error is $e1",
   e2 => s"Error is $e2",

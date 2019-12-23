@@ -44,7 +44,7 @@ However, it comes with a few limitations
     For the client, this leads to either **over-handling** (dead code) or **under-handling** (missed error cases due to wildcard pattern matching)
 
 hotpotato uses **Shapeless Coproducts**, which you can think of as arbitrary union of different types.
-(and unlike sealed traits, the types you mix in does not need to extend anything)
+(and unlike sealed traits, you do not need to own/modify the types you use)
 
 For example, the following two functions each have two error cases, and `Unauthorized` is an error both of them may return.
 ```scala mdoc:invisible

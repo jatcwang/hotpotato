@@ -46,7 +46,7 @@ For example:
 
 Given an error, there are a few things you might want to do with it:
 
-* Turn it into another error (e.g. by wrapping it)
-* Try to recover from it by running some side effect
+* Turn it into another error (either extracting some information or just wrap it in another type)
+* Attempt to recover from it by running some side effect
 * Perform some side effect and consider it "handled". (e.g. logging an error message)
 
