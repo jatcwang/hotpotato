@@ -98,8 +98,8 @@ def findAndBuy(
 
     // Exhaustive error handling, turning all errors into a user-friendly message
     .flatMapErrorAllInto[Nothing](
-      (e: ItemNotFound)   => IO.succeed("item not found!"),
-      (e: ItemOutOfStock) => IO.succeed("item out of stock"),
+      (_: ItemNotFound)   => IO.succeed("item not found!"),
+      (_: ItemOutOfStock) => IO.succeed("item out of stock"),
       (e: PurchaseDenied) => IO.succeed(s"Cannot purchase item because: ${e.msg}"),
     )
 }

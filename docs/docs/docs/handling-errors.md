@@ -65,9 +65,9 @@ import hotpotato._
 val result: Either[OneOf3[E1, E2, E3], String] = returnsE1()
 
 result.mapErrorAllInto(
-  e1 => "e1",
-  e2 => "e2",
-  e3 => "e3"
+  e1 => s"Error is $e1",
+  e2 => s"Error is $e2",
+  e3 => s"Error is $e3",
 )
 ```
 

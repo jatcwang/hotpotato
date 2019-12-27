@@ -18,7 +18,7 @@ If you're using Scala 2.12, make sure you add `scalacOptions += "-Ypartial-uniti
 
 Reload your project, and start handling errors!
 
-```scala mdoc:silent
+```scala
 import hotpotato._
 ```
 
