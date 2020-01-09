@@ -20,7 +20,7 @@ lazy val core = moduleProject("core")
       zioDep % "optional",
       zioCatsInteroptDep % "optional",
       "org.typelevel" %% "cats-laws" % "2.0.0" % Test,
-      "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC1" % Test,
+      "org.typelevel" %% "discipline-scalatest" % "1.0.0-RC2" % Test,
     ),
   )
 
