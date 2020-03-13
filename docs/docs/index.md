@@ -21,12 +21,9 @@ libraryDependencies += "com.github.jatcwang" %% "hotpotato-core" % LATEST_VERSIO
 ```scala mdoc:invisible
 import hotpotato._
 import zio._
-import zio.internal.{Platform, PlatformLive, Tracing}
+import zio.Runtime
 
-val zioRuntime: DefaultRuntime = new DefaultRuntime {
-  override val platform
-  : Platform = PlatformLive.Default.withReportFailure(_ => ()).withTracing(Tracing.disabled)
-}
+val zioRuntime = Runtime.default.withReportFailure(_ => ())
 
 case class ItemNotFound() extends Throwable
 case class ItemOutOfStock() extends Throwable

@@ -5,7 +5,7 @@ object BasicExample {
   import zio._
   import zio.Runtime
 
-  val zioRuntime = Runtime.default
+  val zioRuntime = Runtime.default.withReportFailure(_ => ())
 
   case class ItemNotFound() extends Throwable
   case class ItemOutOfStock() extends Throwable
