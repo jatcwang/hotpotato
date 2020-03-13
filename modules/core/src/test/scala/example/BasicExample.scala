@@ -3,12 +3,9 @@ package example
 object BasicExample {
   import hotpotato._
   import zio._
-  import zio.internal.{Platform, PlatformLive, Tracing}
+  import zio.Runtime
 
-  val zioRuntime: DefaultRuntime = new DefaultRuntime {
-    override val platform: Platform =
-      PlatformLive.Default.withReportFailure(_ => ()).withTracing(Tracing.disabled)
-  }
+  val zioRuntime = Runtime.default
 
   case class ItemNotFound() extends Throwable
   case class ItemOutOfStock() extends Throwable

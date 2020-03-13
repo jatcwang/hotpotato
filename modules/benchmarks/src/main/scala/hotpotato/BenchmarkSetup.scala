@@ -1,10 +1,8 @@
 package hotpotato
 
-import zio.DefaultRuntime
-import zio.internal.{PlatformLive, Tracing}
+import zio.Runtime
+import zio.internal.Tracing
 
 object BenchmarkSetup {
-  val TracedRuntime: DefaultRuntime = new DefaultRuntime {
-    override val platform = PlatformLive.Benchmark.withTracing(Tracing.enabled)
-  }
+  val TracedRuntime: Runtime[zio.ZEnv] = Runtime.default.withTracing(Tracing.enabled)
 }
