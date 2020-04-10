@@ -1,6 +1,6 @@
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.3.7")
 addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.2")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.4")
 addSbtPlugin("com.47deg" % "sbt-microsites" % "1.1.5")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.1.5")
 addSbtPlugin("io.spray" % "sbt-boilerplate" % "0.6.1")
