@@ -7,7 +7,7 @@ lazy val root = Project("hotpotato", file("."))
   )
 
 val zioDep             = "dev.zio" %% "zio" % "1.0.0-RC18-2"
-val zioCatsInteroptDep = "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC12"
+val zioCatsInteroptDep = "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC13"
 val catsEffectDep      = "org.typelevel" %% "cats-effect" % "2.1.3"
 val catsCoreDep        = "org.typelevel" %% "cats-core" % "2.1.1"
 lazy val core = moduleProject("core")
